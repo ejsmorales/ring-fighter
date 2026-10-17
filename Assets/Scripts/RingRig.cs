@@ -24,11 +24,20 @@ namespace RingFighter
             TrySetFloorOrigin();
         }
 
+        private bool warnedNoXR;
+
         private void Update()
         {
             // The XR system may start a moment after the scene does, so retry for a few seconds.
             if (!originSet && Time.time < originRetryUntil)
                 TrySetFloorOrigin();
+
+            if (!warnedNoXR && Time.time > 5f && !XRSettings.isDeviceActive)
+            {
+                warnedNoXR = true;
+                Debug.LogError("Ring Fighter: VR is not running, so head and hand tracking are off. " +
+                    "Check Project Settings > XR Plug-in Management: OpenXR must be ticked for this platform.");
+            }
         }
 
         private void TrySetFloorOrigin()

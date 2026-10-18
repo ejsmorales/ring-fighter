@@ -43,3 +43,21 @@ Save APKs to `C:\Dev\RingFighter\Builds` (ignored by git). Relaunch later from t
 | No "Allow USB debugging" prompt | Developer Mode not active, or charge-only cable | Verified dev account, restart headset, data cable, enable MTP Notification |
 | `git checkout` refuses due to local `ProjectSettings` changes | Unity rewrote settings on first open | Close Unity, `git restore` the file, then checkout |
 | Project Validation warns about Screen Space Ambient Occlusion | Only the PC renderer has it; Quest uses the Mobile renderer | Safe to ignore |
+
+## Wireless testing (either computer)
+
+Run this from the repo folder with the Quest plugged in by USB and on the same Wi-Fi as the PC:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\quest-wireless.ps1
+```
+
+It finds `adb` (on PATH, in the Unity Hub editor folders, or via `ANDROID_HOME`), reads the headset's Wi-Fi
+address, switches it to wireless mode and connects. Then unplug the cable. Add `-Apk C:\path\to\file.apk` to
+install a build as well (installs over the old copy, so saved settings survive).
+
+Run it again whenever the headset restarts or its address changes. In Unity, open File > Build Profiles >
+Android and choose the wireless entry (the IP address) under Run Device, then Build And Run. The Run Device
+choice is per computer and has to be picked on each machine. The script is untested on a real machine so far:
+if it errors, paste the message to Claude.
+

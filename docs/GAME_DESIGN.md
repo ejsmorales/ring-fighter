@@ -25,10 +25,14 @@ making motions with your arms creates glowing energy constructs: offensive, defe
 
 | Move | Type | Input | Cost |
 | --- | --- | --- | --- |
-| Energy bolt | Offense | Quick trigger tap and release, aim with controller | 8 per shot |
-| Charged blast | Offense | Both triggers held, hands together off to one side; release to fire. Longer charge = bigger | Drains while charging |
-| Shield | Defense | Arm raised in front of you, hold trigger ~0.3 s | Drains while held |
+| Energy bolt | Offense | Point the controller forward and pull the trigger (fires on pull) | 6 per shot |
+| Charged blast | Offense | Both triggers held, hands together off to one side; release to fire where you're looking. Longer charge = bigger | Drains while charging |
+| Shield | Defense | Raise your forearm to block (controller pointing up or sideways, not at the opponent) and hold the trigger | Drains while held |
 | Whirlwind | Offense (area) | Hold trigger and circle your arm | Drains while active |
+
+**Pose rule (2026-10-17):** the controller's direction decides between shooting and blocking. Pointing
+forward = aiming (bolt). Pointing up or sideways in front of you = blocking (shield). Aim assist gently
+curves shots that are close to the target (bolt 9°, blast 14°).
 
 ### Ideas backlog
 
@@ -39,6 +43,7 @@ making motions with your arms creates glowing energy constructs: offensive, defe
 ## Roadmap
 
 1. **Controls feel** (current): make gestures reliable and aiming easy. See "Feel targets" below.
+   Tuning is done with the in-headset debug readout (Y on the left controller toggles it).
 2. **Feedback**: sounds, hit flashes, impact effects, clearer energy display.
 3. **Enemy fights back**: the opponent uses ring-style attacks and blocks; player health; shields actually stop shots.
 4. **Movement**: short dash/teleport to dodge.
@@ -57,4 +62,9 @@ making motions with your arms creates glowing energy constructs: offensive, defe
 Record each headset session here: date, build, what worked, what didn't.
 
 - **2026-10-17 — first on-device build.** VR, tracking, all four moves, and the dummy work.
-  Gestures don't trigger reliably every time. Aiming the charged blast is difficult.
+  - Bolt only fired by accident (it required a very fast tap-and-release under 0.28 s).
+  - Shield was hit or miss (its pose overlapped with simply pointing at the dummy).
+  - Charged blast consistent but aiming was hard (it averaged both controllers' directions).
+  - Whirlwind consistent, but its look isn't what's wanted yet (revisit in the art pass).
+  - **Changes made:** bolt fires on trigger pull; pose rule above; blast aims with head gaze; aim assist;
+    in-headset debug readout showing what the gesture system sees.

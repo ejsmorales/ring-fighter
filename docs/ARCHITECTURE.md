@@ -40,6 +40,9 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 | `TrainingDummy.cs` | Practice target: wanders, flinches, health bar, falls, respawns. |
 | `EnergyBarVisual.cs` | The floating energy bar. |
 | `Fx.cs` | Helper to make collider-less placeholder shapes. |
+| `AimAssist.cs` | Targets register an aim point; shots within a few degrees are redirected onto the nearest live target. |
+| `MoveLog.cs` | Short list of recent move events (fired / skipped and why) for the debug readout. |
+| `DebugReadout.cs` | Floating panel (front-left) showing per-hand trigger, speed, pose, circling angle, active moves, and the move log. Created by `RingController` when *Show Debug Readout* is ticked; Y on the left controller toggles it. |
 
 ## How a move is chosen each frame
 
@@ -50,8 +53,17 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 
 Priorities (set in the scene builder): Charged blast 30, Whirlwind 20, Shield 10, Bolt 0.
 
-The bolt is special: it fires on trigger **release**, and only if the press was short and no other move claimed
-that hand in the meantime. That's how a tap shoots but a hold turns into a shield or whirlwind.
+The bolt is special: it fires from `Observe()` the moment the trigger is pulled, unless the pull is clearly for
+another move: the controller isn't pointing forward (blocking pose), the hand is swinging (whirlwind), the hands
+are together (blast), or a lasting move already owns that hand. Every skip is logged with its reason.
+
+## Tuning workflow
+
+1. Play with the debug readout visible. Do a move and watch the readout: pose label (AIMING / BLOCKING),
+   `fwd` value, speed, and circle angle, plus the "Recent" log saying what fired or why it was skipped.
+2. Adjust the matching field on the move component (each has a tooltip), or tell Claude the numbers you saw.
+3. Defaults in scripts only apply to a freshly built scene: after changing defaults, run
+   **Ring Fighter > Build Training Scene** again.
 
 ## Adding a new move
 

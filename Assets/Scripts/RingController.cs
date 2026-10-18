@@ -15,13 +15,17 @@ namespace RingFighter
         private readonly List<Move> allMoves = new List<Move>();
         private readonly List<Move> activeMoves = new List<Move>();
 
-        // Counts how many lasting moves have claimed each hand (index 0 = left, 1 = right).
-        // Lets the energy bolt tell "I tapped the trigger" apart from "that trigger press became something else".
-        private readonly int[] handClaims = new int[2];
+        [Tooltip("Show the floating debug readout (press Y on the left controller to hide/show in game).")]
+        public bool showDebugReadout = true;
 
-        public int GetHandClaims(int handMask)
+        public IReadOnlyList<Move> ActiveMoves { get { return activeMoves; } }
+
+        /// <summary>True if a lasting move (shield, whirlwind, blast) is currently using this hand.</summary>
+        public bool IsHandBusy(int handMask)
         {
-            return handClaims[handMask == Move.LeftMask ? 0 : 1];
+            for (int i = 0; i < activeMoves.Count; i++)
+                if ((activeMoves[i].UsedHands & handMask) != 0) return true;
+            return false;
         }
 
         private void Start()
@@ -31,6 +35,12 @@ namespace RingFighter
             allMoves.Sort((a, b) => b.priority.CompareTo(a.priority));
             for (int i = 0; i < allMoves.Count; i++)
                 allMoves[i].Init(ctx);
+
+            if (showDebugReadout)
+            {
+                DebugReadout readout = new GameObject("Debug Readout").AddComponent<DebugReadout>();
+                readout.Init(ctx);
+            }
         }
 
         private void Update()
@@ -62,8 +72,6 @@ namespace RingFighter
                 if (m.IsActive)
                 {
                     activeMoves.Add(m);
-                    if ((m.UsedHands & Move.LeftMask) != 0) handClaims[0]++;
-                    if ((m.UsedHands & Move.RightMask) != 0) handClaims[1]++;
                     busy |= m.UsedHands;
                     free = Move.BothMask & ~busy;
                 }

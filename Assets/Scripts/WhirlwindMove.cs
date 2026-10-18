@@ -76,6 +76,7 @@ namespace RingFighter
             }
 
             hand.Haptic(0.6f, 0.12f);
+            MoveLog.Add("Whirlwind " + MoveLog.HandName(h) + " started");
             return true;
         }
 
@@ -91,10 +92,14 @@ namespace RingFighter
             if (Gestures.IsCircling(hand, 0.85f, sustainAngle, out angle))
                 lastCircleTime = Time.time;
 
-            bool stillCircling = Time.time - lastCircleTime <= gracePeriod;
-            bool timeLeft = Time.time - startTime <= maxDuration;
-            if (!hand.TriggerHeld || !stillCircling || !timeLeft || !ctx.energy.Drain(drainPerSecond))
+            string reason = null;
+            if (!hand.TriggerHeld) reason = "trigger released";
+            else if (Time.time - lastCircleTime > gracePeriod) reason = "stopped circling";
+            else if (Time.time - startTime > maxDuration) reason = "time up";
+            else if (!ctx.energy.Drain(drainPerSecond)) reason = "out of energy";
+            if (reason != null)
             {
+                MoveLog.Add("Whirlwind ended: " + reason);
                 Finish();
                 return;
             }

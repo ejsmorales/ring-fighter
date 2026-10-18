@@ -38,6 +38,7 @@ namespace RingFighter
         private Transform barFill;
         private MaterialPropertyBlock block;
         private Transform visuals;
+        private Transform aimPoint;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -48,7 +49,19 @@ namespace RingFighter
             wanderPhase = Random.value * 10f;
             block = new MaterialPropertyBlock();
             BuildVisuals();
+
+            // Chest-height point that aim assist steers shots toward.
+            aimPoint = new GameObject("Aim Point").transform;
+            aimPoint.SetParent(transform, false);
+            aimPoint.localPosition = new Vector3(0f, 1.25f, 0f);
+            AimAssist.Register(aimPoint, this);
+
             Revive();
+        }
+
+        private void OnDestroy()
+        {
+            if (aimPoint != null) AimAssist.Unregister(aimPoint);
         }
 
         private void BuildVisuals()
@@ -116,7 +129,10 @@ namespace RingFighter
             UpdateBar();
 
             if (Health <= 0f)
+            {
+                MoveLog.Add("Dummy knocked out!");
                 Die();
+            }
         }
 
         private void Die()

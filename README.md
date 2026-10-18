@@ -36,12 +36,13 @@ Steps 1-4 and 6 are saved in the project, so they only need doing once (then com
 
 | Move | Input |
 | --- | --- |
-| Energy bolt | Quickly tap and release the trigger, aiming with the controller |
-| Charged blast | Hold both triggers with both hands together off to one side; release either trigger to fire |
-| Shield | Raise your arm in front of you and hold the trigger (about a third of a second) |
+| Energy bolt | Point the controller forward and pull the trigger |
+| Charged blast | Hold both triggers with both hands together off to one side; release either trigger to fire where you're looking |
+| Shield | Raise your forearm to block (controller pointing up or sideways) and hold the trigger |
 | Whirlwind | Hold the trigger and swing your arm in circles |
 
 Each move costs ring energy (the bar above your left hand), which recharges when idle.
+A debug panel to your front-left shows what the gesture system sees; press **Y** to hide or show it.
 
 ## Adding a move
 

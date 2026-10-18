@@ -25,6 +25,10 @@ namespace RingFighter
         public float cancelHandGap = 0.60f;
         [Tooltip("How far to one side of the head the hands must be to start charging.")]
         public float minSideOffset = 0.18f;
+        [Tooltip("Aim where you look (true) or where the controllers point (false).")]
+        public bool aimWithHead = true;
+        [Tooltip("Blasts aimed within this many degrees of a target curve onto it. 0 turns aim assist off.")]
+        public float aimAssistAngle = 14f;
 
         private float charge;      // 0 to 1
         private GameObject orb;
@@ -46,6 +50,7 @@ namespace RingFighter
             IsActive = true;
             UsedHands = BothMask;
             charge = 0f;
+            MoveLog.Add("Blast charging");
             orb = Fx.Shape(PrimitiveType.Sphere, blastMaterial, Vector3.one * minRadius * 2f);
             orb.name = "Charging Blast";
             PlaceOrb();
@@ -60,6 +65,7 @@ namespace RingFighter
 
             if (gap > cancelHandGap)
             {
+                MoveLog.Add("Blast fizzled: hands apart");
                 Finish();   // pulled the hands apart: fizzle, no shot
                 return;
             }
@@ -91,6 +97,8 @@ namespace RingFighter
 
         private Vector3 AimDirection()
         {
+            if (aimWithHead && ctx.Head != null)
+                return ctx.Head.transform.forward;
             Vector3 d = ctx.Left.AimForward + ctx.Right.AimForward;
             if (d.sqrMagnitude < 0.01f) d = ctx.rig.FlatForward();
             return d.normalized;
@@ -101,11 +109,19 @@ namespace RingFighter
             if (charge >= minChargeToFire)
             {
                 float radius = Mathf.Lerp(minRadius, maxRadius, charge);
-                Vector3 dir = AimDirection();
                 Vector3 origin = orb != null ? orb.transform.position : (ctx.Left.transform.position + ctx.Right.transform.position) * 0.5f;
+                bool assisted = false;
+                Vector3 dir = AimDirection();
+                if (aimAssistAngle > 0f)
+                    dir = AimAssist.Adjust(origin, dir, aimAssistAngle, out assisted);
                 Projectile.Spawn(blastMaterial, origin, dir, speed, Mathf.Lerp(minDamage, maxDamage, charge), radius, knockback);
                 ctx.Left.Haptic(0.9f, 0.15f);
                 ctx.Right.Haptic(0.9f, 0.15f);
+                MoveLog.Add("Blast fired " + Mathf.RoundToInt(charge * 100f) + "%" + (assisted ? " (assist)" : ""));
+            }
+            else
+            {
+                MoveLog.Add("Blast fizzled: released too early");
             }
             Finish();
         }

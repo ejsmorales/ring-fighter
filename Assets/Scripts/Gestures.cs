@@ -50,20 +50,34 @@ namespace RingFighter
             return angleDegrees >= minAngleDegrees;
         }
 
+        /// <summary>Direction the player's head faces, flattened onto the ground.</summary>
+        public static Vector3 FlatForward(TrackedNode head)
+        {
+            Vector3 f = head.transform.forward;
+            f.y = 0f;
+            if (f.sqrMagnitude < 0.0001f) return Vector3.forward;
+            return f.normalized;
+        }
+
         /// <summary>
-        /// Is the hand raised in front of the body, like holding up a forearm to block?
+        /// How much the controller points the way the player faces: 1 = straight ahead, 0 = up/down/sideways.
+        /// Pointing at the opponent is near 1; a raised blocking forearm points up or across, near 0.
         /// </summary>
-        public static bool IsGuarding(TrackedNode head, TrackedNode hand)
+        public static float ForwardDot(TrackedNode head, TrackedNode hand)
+        {
+            return Vector3.Dot(hand.AimForward, FlatForward(head));
+        }
+
+        /// <summary>
+        /// Is the hand in a blocking pose? In front of the body, at chest height or above, and the controller
+        /// is NOT pointing forward (it points up or sideways, like a raised forearm). That last part is what
+        /// keeps "aiming at the opponent" from counting as a block.
+        /// </summary>
+        public static bool IsGuarding(TrackedNode head, TrackedNode hand, float maxForwardDot)
         {
             Vector3 rel = hand.transform.position - head.transform.position;
-            Vector3 flatForward = head.transform.forward;
-            flatForward.y = 0f;
-            if (flatForward.sqrMagnitude < 0.0001f) return false;
-            flatForward.Normalize();
-
-            float ahead = Vector3.Dot(rel, flatForward);
-            float sideways = Vector3.ProjectOnPlane(rel, Vector3.up).magnitude;
-            return rel.y > -0.30f && ahead > 0.12f && sideways < 0.75f;
+            float ahead = Vector3.Dot(rel, FlatForward(head));
+            return ahead > 0.08f && rel.y > -0.45f && ForwardDot(head, hand) < maxForwardDot;
         }
 
         /// <summary>

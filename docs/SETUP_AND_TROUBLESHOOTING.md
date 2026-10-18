@@ -69,3 +69,17 @@ Open the debug panel (Y). The top line shows the startup physics self-test. Fire
 `HIT ...` means damage landed; `Shot hit Floor (not a target)` means the shot went low (aim tilt, A/B);
 `Shot missed (expired)` means it flew past. Since 2026-10-18, hits use `HitShapes` math as well as physics.
 
+## One-command build and install (no Unity window)
+
+Close the Unity editor, plug in the Quest, then from the repo folder:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\build-quest.ps1
+```
+
+It runs `git pull`, then Unity in batch mode (`Assets/Editor/CommandLineBuild.cs`): rebuilds the training scene,
+builds `Builds\RingFighter.apk`, then installs it over USB and starts the game. Options: `-NoPull`, `-NoInstall`,
+`-SkipScene` (keep the current scene), `-Wireless` (use wireless ADB instead of the cable). If the build fails it
+prints the error lines from `Builds\unity-build.log`. The first run on a machine is slow (Unity imports the
+project); later runs are faster. Untested on a real machine so far.
+

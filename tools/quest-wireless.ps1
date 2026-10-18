@@ -14,7 +14,9 @@
 param(
     [string]$Apk,
     [string]$Ip,            # headset address to reconnect to if no cable is attached (remembered between runs)
-    [int]$Port = 5555
+    [int]$Port = 5555,
+    [switch]$Usb,           # if the cable is plugged in, just use it (don't switch to wireless)
+    [switch]$Launch         # start the game after installing
 )
 
 $ErrorActionPreference = 'Stop'
@@ -83,7 +85,11 @@ if (-not $usb -and -not $wifi) {
     }
 }
 
-if ($usb) {
+if ($usb -and $Usb) {
+    $target = $usb.Serial
+    Write-Host "Quest found over USB ($target). Using the cable." -ForegroundColor Green
+}
+elseif ($usb) {
     Write-Host "Quest found over USB ($($usb.Serial))."
     $ipOut = (& $adb -s $usb.Serial shell ip -f inet addr show wlan0) -join "`n"
     if ($ipOut -match 'inet (\d+\.\d+\.\d+\.\d+)/') {
@@ -125,4 +131,13 @@ if ($Apk) {
     }
     Write-Host "Installing $Apk ..."
     & $adb -s $target install -r $Apk
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host 'Install failed (see the message above).' -ForegroundColor Red
+        exit 1
+    }
+}
+
+if ($Launch) {
+    Write-Host 'Starting Ring Fighter on the headset ...'
+    & $adb -s $target shell monkey -p com.ringfighter.game -c android.intent.category.LAUNCHER 1 | Out-Null
 }

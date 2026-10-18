@@ -28,6 +28,12 @@ namespace RingFighter.EditorTools
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                 return;
 
+            BuildTrainingSceneNoPrompt();
+        }
+
+        /// <summary>Same as the menu item, without dialogs. Used by the command-line build.</summary>
+        public static void BuildTrainingSceneNoPrompt()
+        {
             EnsureFolder("Assets", "Materials");
             EnsureFolder("Assets", "Scenes");
 

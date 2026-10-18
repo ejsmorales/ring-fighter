@@ -14,11 +14,18 @@ namespace RingFighter
         private static int count;
 
         /// <summary>One line pinned at the top of the debug readout (for example the startup physics check).</summary>
-        public static string Status;
+        public static string Status
+        {
+            get { return status; }
+            set { status = value; Debug.Log("[RingFighter] STATUS " + value); }
+        }
+        private static string status;
 
         public static void Add(string message)
         {
             entries[head] = Time.time.ToString("0.0") + "s  " + message;
+            // Also goes to the device log, so `adb logcat -s Unity` shows every move event live.
+            Debug.Log("[RingFighter] " + message);
             head = (head + 1) % Size;
             if (count < Size) count++;
         }

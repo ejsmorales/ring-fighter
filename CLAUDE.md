@@ -14,3 +14,5 @@ Working agreements:
 - Push work to a `claude/...` branch; the owner pulls, builds to the headset, and reports back.
 - Update the docs (design decisions, playtest log, troubleshooting) as part of each change.
 - Keep tuning values as public fields with tooltips. New moves extend `Move`.
+- Update `docs/TEST_PLAN.md` with every change: replace "This build" with numbered tests for what changed
+  (do / expected / what the debug panel shows); keep the regression list current.

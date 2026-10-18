@@ -58,3 +58,6 @@ Third-party asset packs are not committed to this repo. Re-import them on each m
 - **Aim feels off:** each hand has an **Aim** child object (shown by the thin green line). Rotate it in the scene
   until the line points where you expect, then rebuild or save the scene.
 - **Gesture too strict or too loose:** select **Ring Controller** and adjust the numbers on each move component.
+
+- `docs/TEST_PLAN.md`: what to test on the headset for the latest build.
+- `build-quest.bat`: double-click to pull, build and install on the Quest (close Unity first).

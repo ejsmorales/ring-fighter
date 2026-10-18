@@ -77,6 +77,8 @@ Close the Unity editor, plug in the Quest, then from the repo folder:
 powershell -ExecutionPolicy Bypass -File tools\build-quest.ps1
 ```
 
+Or just double-click `build-quest.bat` in the repo folder (same thing; the window stays open at the end).
+
 It runs `git pull`, then Unity in batch mode (`Assets/Editor/CommandLineBuild.cs`): rebuilds the training scene,
 builds `Builds\RingFighter.apk`, then installs it over USB and starts the game. Options: `-NoPull`, `-NoInstall`,
 `-SkipScene` (keep the current scene), `-Wireless` (use wireless ADB instead of the cable). If the build fails it

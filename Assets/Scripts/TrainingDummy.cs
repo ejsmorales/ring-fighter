@@ -39,6 +39,7 @@ namespace RingFighter
         private MaterialPropertyBlock block;
         private Transform visuals;
         private Transform aimPoint;
+        private float pendingDamage;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -49,6 +50,11 @@ namespace RingFighter
             wanderPhase = Random.value * 10f;
             block = new MaterialPropertyBlock();
             BuildVisuals();
+
+            // A kinematic Rigidbody tells physics this object moves, so hit tests use its current position.
+            Rigidbody rb = gameObject.AddComponent<Rigidbody>();
+            rb.isKinematic = true;
+            rb.useGravity = false;
 
             // Chest-height point that aim assist steers shots toward.
             aimPoint = new GameObject("Aim Point").transform;
@@ -123,6 +129,14 @@ namespace RingFighter
             if (!IsAlive) return;
             Health = Mathf.Max(0f, Health - amount);
             flashTimer = 0.12f;
+
+            // Continuous damage (whirlwind) arrives in tiny pieces; bundle it so feedback isn't spammed.
+            pendingDamage += amount;
+            if (amount >= 1f || pendingDamage >= 5f)
+            {
+                Impact.Hit(point, pendingDamage, new Color(1f, 0.85f, 0.3f), lookTarget);
+                pendingDamage = 0f;
+            }
             force.y = 0f;
             knockOffset += force * 0.15f;
             knockOffset = Vector3.ClampMagnitude(knockOffset, 1.5f);

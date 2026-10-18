@@ -32,6 +32,7 @@ namespace RingFighter
             age += Time.deltaTime;
             if (age >= lifetime)
             {
+                MoveLog.Add("Shot missed (expired)");
                 Destroy(gameObject);
                 return;
             }
@@ -39,12 +40,21 @@ namespace RingFighter
             float step = speed * Time.deltaTime;
             Vector3 dir = transform.forward;
             RaycastHit hit;
+            // Moving targets change position in Update, so push those changes to the physics system first.
+            Physics.SyncTransforms();
             // SphereCast instead of relying on physics collisions, so fast shots never skip through targets.
             if (Physics.SphereCast(transform.position, radius, dir, out hit, step, ~0, QueryTriggerInteraction.Ignore))
             {
                 IDamageable target = hit.collider.GetComponentInParent<IDamageable>();
                 if (target != null && target.IsAlive)
+                {
                     target.TakeDamage(damage, hit.point, dir * knockback);
+                    MoveLog.Add("HIT " + hit.collider.name + " for " + Mathf.RoundToInt(damage));
+                }
+                else
+                {
+                    MoveLog.Add("Shot hit " + hit.collider.name + " (not a target)");
+                }
                 Destroy(gameObject);
                 return;
             }

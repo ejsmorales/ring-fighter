@@ -153,8 +153,7 @@ namespace RingFighter.EditorTools
             ring.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
             Prim(PrimitiveType.Sphere, "Ring Gem", hand.transform, new Vector3(0f, 0.04f, 0.05f), Vector3.one * 0.022f, ringMat, false);
 
-            // Thin line showing where the hand is aiming (handy while tuning; delete it later if you like).
-            Prim(PrimitiveType.Cube, "Aim Line", aim.transform, new Vector3(0f, 0f, 0.3f), new Vector3(0.004f, 0.004f, 0.6f), ringMat, false);
+            // No aim line: aiming is skill-based (decided 2026-10-18).
             return tracked;
         }
 

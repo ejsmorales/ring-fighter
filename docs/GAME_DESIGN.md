@@ -68,3 +68,14 @@ Record each headset session here: date, build, what worked, what didn't.
   - Whirlwind consistent, but its look isn't what's wanted yet (revisit in the art pass).
   - **Changes made:** bolt fires on trigger pull; pose rule above; blast aims with head gaze; aim assist;
     in-headset debug readout showing what the gesture system sees.
+
+- **2026-10-18 — wireless build.** Much more responsive; gestures perform consistently and attacks fire.
+  - Attacks passed through the dummy (no damage). Cause not confirmed. Suspected: the moving dummy's colliders
+    weren't being tracked by physics. **Changes made (untested):** dummy gets a kinematic Rigidbody, projectiles
+    sync transforms before each cast, and every shot now logs `HIT <part>`, `Shot hit <thing> (not a target)` or
+    `Shot missed (expired)` in the debug readout. If it still passes through, read that log and report it.
+  - The always-on green aim line was confusing and cluttered. **Decision:** no aim indicator at all; aiming is
+    skill-based, helped by aim assist. Line removed from the scene builder.
+  - **Decision (hit feedback):** red hit flash and knockback, floating damage numbers, impact burst, impact sound
+    (generated in code for now), controller buzz when firing. Implemented in `Impact.cs` (untested).
+  - **Decision (art):** style not chosen yet; Claude to present free-pack options in different styles.

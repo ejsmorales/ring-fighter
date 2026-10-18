@@ -39,6 +39,7 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 | `IDamageable.cs` | Interface for anything that can be hit. |
 | `TrainingDummy.cs` | Practice target: wanders, flinches, health bar, falls, respawns. |
 | `EnergyBarVisual.cs` | The floating energy bar. |
+| `Impact.cs` | Hit feedback made in code: expanding burst, floating damage number, generated thump sound. Called by `TrainingDummy.TakeDamage`. |
 | `Fx.cs` | Helper to make collider-less placeholder shapes. |
 | `AimAssist.cs` | Targets register an aim point; shots within a few degrees are redirected onto the nearest live target. |
 | `MoveLog.cs` | Short list of recent move events (fired / skipped and why) for the debug readout. |

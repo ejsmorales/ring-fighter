@@ -25,13 +25,13 @@ making motions with your arms creates glowing energy constructs: offensive, defe
 
 | Move | Type | Input | Cost |
 | --- | --- | --- | --- |
-| Energy bolt | Offense | Point the controller forward and pull the trigger (fires on pull) | 6 per shot |
+| Energy laser | Offense | Point forward and hold the trigger: continuous beam. A tap gives a short flash. Stops if you stop pointing forward or swing the hand hard | 20/sec while firing |
 | Charged blast | Offense | Both triggers held, hands together off to one side; release to fire where you're looking. Longer charge = bigger | Drains while charging |
 | Shield | Defense | Raise your forearm to block (controller pointing up or sideways, not at the opponent) and hold the trigger | Drains while held |
 | Whirlwind | Offense (area) | Hold trigger and circle your arm | Drains while active |
 
 **Pose rule (2026-10-17):** the controller's direction decides between shooting and blocking. Pointing
-forward = aiming (bolt). Pointing up or sideways in front of you = blocking (shield). Aim assist gently
+forward = aiming (laser). Pointing up or sideways in front of you = blocking (shield). Aim assist gently
 curves shots that are close to the target (bolt 9°, blast 14°).
 
 ### Ideas backlog
@@ -79,3 +79,12 @@ Record each headset session here: date, build, what worked, what didn't.
   - **Decision (hit feedback):** red hit flash and knockback, floating damage numbers, impact burst, impact sound
     (generated in code for now), controller buzz when firing. Implemented in `Impact.cs` (untested).
   - **Decision (art):** style not chosen yet; Claude to present free-pack options in different styles.
+
+- **2026-10-18 (later) — build with feedback changes.** Aim line gone, much more responsive.
+  - The single bolt was awkward to aim: the controller had to be bent down for it to point forward. Cause:
+    the controller's own forward axis points up along the handle. **Change (untested):** pointing direction is
+    tilted down by `Aim Pitch Offset` (default 50 degrees) on each hand's Tracked Node. Tune it using the `fwd`
+    number in the debug panel: it should read about 0.9+ when you point at the dummy with a relaxed wrist.
+    Raise the offset if you still have to bend down; lower it if shots land low.
+  - **Decision:** replace the single bolt with a held laser that burns energy. Implemented as `LaserMove`
+    (the old `EnergyBoltMove` script is kept but no longer used). Open idea: beam hum/loop sound.

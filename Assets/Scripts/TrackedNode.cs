@@ -33,9 +33,18 @@ namespace RingFighter
         public bool IsHand { get { return node != NodeType.Head; } }
         public int HandMask { get { return node == NodeType.LeftHand ? 1 : (node == NodeType.RightHand ? 2 : 0); } }
 
+        [Tooltip("Tilts the pointing direction downward (degrees) so a relaxed wrist points straight ahead. " +
+                 "Raise it if you still have to bend the controller down to aim; lower it (or go negative) if shots go too low.")]
+        public float aimPitchOffset = 50f;
+
         public Vector3 AimForward
         {
-            get { return aim != null ? aim.forward : transform.forward; }
+            get
+            {
+                Quaternion rot = aim != null ? aim.rotation : transform.rotation;
+                if (IsHand) rot *= Quaternion.Euler(aimPitchOffset, 0f, 0f);
+                return rot * Vector3.forward;
+            }
         }
 
         public Vector3 AimOrigin

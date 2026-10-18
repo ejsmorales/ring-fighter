@@ -11,7 +11,7 @@ Ring Rig (RingRig)
  └─ Right Hand (TrackedNode: RightHand) └─ Aim
 
 Ring Controller (RingController + RingEnergy + one component per move)
- ├─ EnergyBoltMove
+ ├─ LaserMove
  ├─ ChargedBlastMove
  ├─ WhirlwindMove
  └─ ShieldMove
@@ -34,7 +34,7 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 | `Move.cs` | Base class for every move, plus `RingContext` (what a move can access). |
 | `RingController.cs` | Runs all moves each frame, tracks which hands are busy, decides which move starts. |
 | `Gestures.cs` | Pure gesture math: `IsCircling`, `IsGuarding`, `HandsTogetherAtSide`. Most "feel" tuning lives here and in move fields. |
-| `EnergyBoltMove.cs`, `ChargedBlastMove.cs`, `ShieldMove.cs`, `WhirlwindMove.cs` | The four moves. |
+| `LaserMove.cs`, `ChargedBlastMove.cs`, `ShieldMove.cs`, `WhirlwindMove.cs` | The four moves. |
 | `Projectile.cs` | Flying energy ball; sphere-casts each frame so fast shots can't pass through targets. |
 | `IDamageable.cs` | Interface for anything that can be hit. |
 | `TrainingDummy.cs` | Practice target: wanders, flinches, health bar, falls, respawns. |
@@ -52,11 +52,15 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 3. For each hand that is free, it asks moves in **priority order** (highest first) to `TryStart`.
    A move that starts claims its hand(s) via `UsedHands` (1 = left, 2 = right, 3 = both).
 
-Priorities (set in the scene builder): Charged blast 30, Whirlwind 20, Shield 10, Bolt 0.
+Priorities (set in the scene builder): Charged blast 30, Whirlwind 20, Shield 10, Laser 0.
 
-The bolt is special: it fires from `Observe()` the moment the trigger is pulled, unless the pull is clearly for
-another move: the controller isn't pointing forward (blocking pose), the hand is swinging (whirlwind), the hands
-are together (blast), or a lasting move already owns that hand. Every skip is logged with its reason.
+The laser starts on a trigger pull (one decision per pull) unless the pull is clearly for another move: the
+controller isn't pointing forward (blocking pose), the hand is swinging (whirlwind), or the hands are together
+(blast). Every skip is logged with its reason. While it runs it claims the hand, and it cuts out if the hand
+swings hard so a whirlwind can take over.
+
+Aim direction: `TrackedNode.AimForward` is the controller's forward tilted down by `aimPitchOffset`, because the
+raw controller axis points up the handle. All pose checks (laser, shield) use this same direction.
 
 ## Tuning workflow
 

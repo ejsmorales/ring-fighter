@@ -93,9 +93,9 @@ namespace RingFighter.EditorTools
             controller.energy = energy;
 
             // Priority decides which move wins when one gesture could match several (higher is checked first).
-            EnergyBoltMove bolt = ringGo.AddComponent<EnergyBoltMove>();
-            bolt.boltMaterial = boltMat;
-            bolt.priority = 0;
+            LaserMove laser = ringGo.AddComponent<LaserMove>();
+            laser.beamMaterial = boltMat;
+            laser.priority = 0;
             ChargedBlastMove blast = ringGo.AddComponent<ChargedBlastMove>();
             blast.blastMaterial = blastMat;
             blast.priority = 30;

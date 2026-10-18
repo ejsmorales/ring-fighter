@@ -16,7 +16,7 @@ namespace RingFighter
         public float refreshInterval = 0.1f;
 
         private RingContext ctx;
-        private EnergyBoltMove bolt;
+        private LaserMove laser;
         private ShieldMove shield;
         private Text text;
         private GameObject panel;
@@ -27,7 +27,7 @@ namespace RingFighter
         public void Init(RingContext context)
         {
             ctx = context;
-            bolt = ctx.controller.GetComponent<EnergyBoltMove>();
+            laser = ctx.controller.GetComponent<LaserMove>();
             shield = ctx.controller.GetComponent<ShieldMove>();
             Build();
         }
@@ -127,7 +127,7 @@ namespace RingFighter
 
             float fwd = Gestures.ForwardDot(ctx.Head, hand);
             string pose = "neutral";
-            if (bolt != null && fwd >= bolt.minForwardDot) pose = "AIMING";
+            if (laser != null && fwd >= laser.minForwardDot) pose = "AIMING";
             else if (shield != null && Gestures.IsGuarding(ctx.Head, hand, shield.startMaxForwardDot)) pose = "BLOCKING";
 
             float angle;

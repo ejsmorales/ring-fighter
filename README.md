@@ -3,6 +3,8 @@
 A Quest 3 VR fighting game: you wear a Green Lantern-style power ring, and button presses plus arm motions
 trigger different moves (attack, defense, utility). Built with Unity 6 (6000.6.6f1) and OpenXR.
 
+**Docs:** [Game design and roadmap](docs/GAME_DESIGN.md) · [How the code works](docs/ARCHITECTURE.md) · [Setup and troubleshooting](docs/SETUP_AND_TROUBLESHOOTING.md)
+
 ## Open the project
 
 1. Install **Unity 6000.6.6f1** (same version on every machine) with the **Android Build Support** module

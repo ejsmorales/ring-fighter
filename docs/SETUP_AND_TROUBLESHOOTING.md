@@ -1,0 +1,45 @@
+# Ring Fighter — Setup and troubleshooting
+
+## Machines
+
+| Machine | Use |
+| --- | --- |
+| Desktop (i5-13600, 32 GB, RTX 5070 Ti) | Main dev machine: building and installing to the headset |
+| Surface Pro 9 | Secondary: code and editor work, builds over USB |
+
+Both need **Unity 6000.6.6f1** with **Android Build Support** (OpenJDK, Android SDK & NDK), Git for Windows
+(`git lfs install` once), and the repo cloned to `C:\Dev\RingFighter`.
+
+## Daily git workflow
+
+1. Before starting: close Unity, `git pull`.
+2. Before stopping or switching machines: **File > Save Project**, close Unity, then
+   `git add .`, `git commit -m "..."`, `git push`.
+3. Don't edit the same scene on both machines without pulling in between.
+
+## Testing on the headset
+
+**Build and Run (works today):** headset plugged in over USB-C, **File > Build Profiles > Android > Build And Run**.
+Save APKs to `C:\Dev\RingFighter\Builds` (ignored by git). Relaunch later from the headset's App Library under
+**Unknown Sources**. The headset can be unplugged after install.
+
+**Live preview in the editor:** needs a PC VR runtime. The Meta Quest Link installer failed on the desktop
+(possibly the RTX 50-series not being on Meta's supported list yet). Alternative: Steam + SteamVR on the PC,
+**Steam Link** app on the Quest, and set SteamVR as the OpenXR runtime (SteamVR > Settings > OpenXR).
+
+## One-time headset setup (done)
+
+1. Verified Meta developer account and an organization at developers.meta.com.
+2. Meta Horizon phone app: headset > Headset Settings > Developer Mode on. Restart the headset.
+3. Headset: Settings > Developer > MTP Notification on. Plug in, accept **Allow USB debugging** (always allow).
+4. Check with `adb devices` (adb is in Unity's Android SDK `platform-tools` folder).
+
+## Problems we've hit, and fixes
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `AssetImportWorker ... has crashed` in `OpenXRPackageSettings`, plus empty `XR 1`…`XR 5` folders | OpenXR creating its settings folder inside an import worker | Delete the stray folders, create `Assets\XR\Settings`, set import worker counts low in Project Settings > Editor |
+| Game runs as a flat window, no hands or moves | OpenXR not ticked under XR Plug-in Management (Android) | Tick OpenXR on the Android and Windows tabs; it's now saved in `Assets/XR/XRGeneralSettingsPerBuildTarget.asset`. `RingRig` logs an error if VR isn't running |
+| No "Allow USB debugging" prompt | Developer Mode not active, or charge-only cable | Verified dev account, restart headset, data cable, enable MTP Notification |
+| `git checkout` refuses due to local `ProjectSettings` changes | Unity rewrote settings on first open | Close Unity, `git restore` the file, then checkout |
+| Project Validation warns about Screen Space Ambient Occlusion | Only the PC renderer has it; Quest uses the Mobile renderer | Safe to ignore |

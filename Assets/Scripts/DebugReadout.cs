@@ -114,6 +114,17 @@ namespace RingFighter
                 sb.Append("Aim tilt ").Append(Mathf.RoundToInt(ctx.Right.aimPitchOffset)).Append("  (A = more, B = less)\n");
             sb.Append("Energy ").Append(Mathf.RoundToInt(ctx.energy.Current)).Append(" / ").Append(Mathf.RoundToInt(ctx.energy.max)).Append('\n');
 
+            if (ctx.RingHand == null) sb.Append("Ring hand: not picked yet (pull a trigger)\n");
+            else
+            {
+                sb.Append("Ring hand: ").Append(ctx.RingHand == ctx.Left ? "LEFT" : "RIGHT");
+                if (laser != null)
+                {
+                    float gap = laser.HandGap();
+                    sb.Append("   focus: ").Append(laser.IsFocused() ? "YES" : "no").Append(" (").Append(gap.ToString("0.00")).Append(" m)");
+                }
+                sb.Append('\n');
+            }
             sb.Append("Active: ");
             var active = ctx.controller.ActiveMoves;
             if (active.Count == 0) sb.Append("none");

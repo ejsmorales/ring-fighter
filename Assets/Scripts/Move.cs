@@ -12,6 +12,19 @@ namespace RingFighter
         public TrackedNode Head { get { return rig.head; } }
         public TrackedNode Left { get { return rig.leftHand; } }
         public TrackedNode Right { get { return rig.rightHand; } }
+
+        /// <summary>The hand wearing the ring (main attacks). Null until the player picks it at startup.</summary>
+        public TrackedNode RingHand { get; set; }
+
+        /// <summary>The other hand: support (shield, focus). Null until the ring hand is picked.</summary>
+        public TrackedNode OffHand
+        {
+            get
+            {
+                if (RingHand == null) return null;
+                return RingHand == rig.leftHand ? rig.rightHand : rig.leftHand;
+            }
+        }
     }
 
     /// <summary>

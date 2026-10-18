@@ -23,12 +23,17 @@ making motions with your arms creates glowing energy constructs: offensive, defe
 
 ### Implemented (v1)
 
+**Ring hand and off hand (2026-10-18):** at every launch a prompt asks you to pull the trigger on the hand that
+wears the ring. That hand is the main attacker; the other hand is support (defense and focus) and never shoots.
+Only the ring hand shows the ring; the energy bar floats over the off hand.
+
 | Move | Type | Input | Cost |
 | --- | --- | --- | --- |
-| Energy bolt / laser | Offense | Point forward and **tap** the trigger for a single bolt (6 energy). **Hold** it past ~0.22 s for a continuous laser. The laser stops if you stop pointing forward or swing the hand hard | Bolt 6; laser 20/sec |
+| Energy bolt | Offense | Ring hand alone: point forward, pull the trigger. Fires instantly | 6 per shot |
+| Focused laser | Offense | **Focus stance:** off hand resting on the ring hand (within 0.2 m). Tap = bolt; hold past ~0.22 s = continuous laser. Stops if you let go, break focus, stop pointing forward or swing hard | 20/sec |
 | Charged blast | Offense | Both triggers held, hands together off to one side; release to fire where you're looking. Longer charge = bigger | Drains while charging |
-| Shield | Defense | Raise your forearm to block (controller pointing up or sideways, not at the opponent) and hold the trigger | Drains while held |
-| Whirlwind | Offense (area) | Hold trigger and circle your arm | Drains while active |
+| Shield | Defense | Either hand: raise the forearm (controller pointing up or sideways) and hold the trigger. **Both arms = one big shield** (double size, strength 2) | 8/sec, 12/sec doubled |
+| Whirlwind | Offense (area) | Ring hand: hold trigger and circle the arm | Drains while active |
 
 **Pose rule (2026-10-17):** the controller's direction decides between shooting and blocking. Pointing
 forward = aiming (laser). Pointing up or sideways in front of you = blocking (shield). Aim assist gently
@@ -37,6 +42,8 @@ curves shots that are close to the target (bolt 9°, blast 14°).
 ### Ideas backlog
 
 - **Construct punch**: trigger + A button + upward motion throws a giant glowing fist.
+- Off-hand support moves (off hand never attacks): grab/pull construct, recharge stance, focus-boosted blast.
+- Change the ring hand without restarting (for now it's picked once per launch).
 - More two-hand combos using both controllers together.
 - **Ring Nova** (idea from the owner, 2026-10-18): hold both triggers AND both grips (all four), hands start
   up by the shoulders, sweep both down to the hips in one motion: a green explosion around the player that
@@ -109,4 +116,13 @@ Record each headset session here: date, build, what worked, what didn't.
     (`HitShapes`) and shots, the laser and the whirlwind test it with plain math. Also: the dummy's Rigidbody and a
     hit collider are now saved in the scene, `Assets/link.xml` stops the build stripping physics code, and the
     debug panel's top line shows a startup physics self-test ("physics test OK / FAILED").
+
+- **2026-10-18 (night) — first build where damage works.** Dummy takes damage, dies and respawns; haptics on
+  attacks; "felt great and actually fun". Physics-free `HitShapes` fixed hits.
+  - **Decisions (grill):** ring hand picked at startup every launch; laser requires the focus stance (off hand on
+    the ring hand); shield works with either hand and both arms make a bigger, stronger shield; the off hand is
+    defense/support only. Claude's calls: whirlwind ring hand only, charged blast stays two-handed, ring hand alone
+    fires instant bolts (no tap delay). Implemented (untested).
+  - Damage numbers: TextMesh created from code had no font, so numbers may have been invisible. Now given the
+    built-in font (also used for the ring-hand prompt).
 

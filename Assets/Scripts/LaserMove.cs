@@ -3,9 +3,10 @@ using UnityEngine;
 namespace RingFighter
 {
     /// <summary>
-    /// Basic attack: point forward and tap the trigger for a single energy bolt, or keep holding it past a short delay for a
-    /// continuous laser. The laser burns ring energy while it's on, hurts the first target it touches, and stops
-    /// when you let go, stop pointing forward, swing the hand hard (that's a whirlwind), or run dry.
+    /// Main attack, ring hand only. Ring hand alone: every trigger pull fires an instant bolt.
+    /// Focus stance (off hand resting on the ring hand): tap for a bolt, hold past a short delay for a continuous
+    /// laser. The laser burns ring energy, hurts the first target it touches, and stops when you let go, stop
+    /// pointing forward, break focus, swing the hand hard (that's a whirlwind), or run dry.
     /// Replaces EnergyBoltMove, which is still in the project but no longer used.
     /// </summary>
     public class LaserMove : Move
@@ -39,16 +40,21 @@ namespace RingFighter
         public float startMaxHandSpeed = 1.6f;
         [Tooltip("Beam cuts out if the hand moves faster than this (m/s), freeing it for a whirlwind.")]
         public float breakHandSpeed = 2.4f;
-        [Tooltip("Hands closer than this (meters) are charging a blast, so no laser.")]
+        [Tooltip("Hands between the focus distance and this (meters) are ambiguous (maybe a blast), so nothing fires.")]
         public float handsTogetherGap = 0.3f;
         [Tooltip("Beam bends onto a target within this many degrees. 0 turns aim assist off.")]
         public float aimAssistAngle = 7f;
 
-        private readonly bool[] wasHeld = new bool[2];
-        private readonly bool[] waiting = new bool[2];    // trigger pulled, still deciding tap or hold
-        private readonly bool[] armed = new bool[2];      // pose was good when the trigger was pulled
-        private readonly bool[] ready = new bool[2];      // hold confirmed: start the laser
-        private readonly float[] pressTime = new float[2];
+        [Header("Focus (off hand on the ring hand)")]
+        [Tooltip("Hands closer than this (meters) count as focusing: needed to fire the laser.")]
+        public float focusDistance = 0.2f;
+        [Tooltip("The laser stops if the hands drift further apart than this (meters).")]
+        public float focusBreakDistance = 0.32f;
+
+        private bool wasHeld = true;   // ignore a trigger that is already down when the ring hand is picked
+        private bool waiting;          // focused pull: deciding between tap (bolt) and hold (laser)
+        private bool ready;            // hold confirmed: start the laser
+        private float pressTime;
 
         private TrackedNode hand;
         private float startTime;
@@ -61,72 +67,95 @@ namespace RingFighter
             priority = 0;
         }
 
-        public override void Observe()
+        /// <summary>Distance between the two hands, or a big number if either is missing.</summary>
+        public float HandGap()
         {
-            if (ctx == null) return;
-            Track(0, ctx.Left, LeftMask);
-            Track(1, ctx.Right, RightMask);
+            if (ctx == null || ctx.Left == null || ctx.Right == null) return 99f;
+            return (ctx.Left.transform.position - ctx.Right.transform.position).magnitude;
         }
 
-        private void Track(int i, TrackedNode h, int mask)
+        public bool IsFocused()
         {
-            if (h == null) return;
+            return ctx != null && ctx.RingHand != null && ctx.OffHand != null && ctx.OffHand.IsTracked
+                   && HandGap() < focusDistance;
+        }
+
+        public override void Observe()
+        {
+            if (ctx == null || ctx.RingHand == null) return;
+            TrackedNode h = ctx.RingHand;
             bool held = h.TriggerHeld;
 
-            if (held && !wasHeld[i])
+            if (held && !wasHeld)
             {
-                waiting[i] = true;
-                ready[i] = false;
-                pressTime[i] = Time.time;
-                armed[i] = CheckPose(h);
+                ready = false;
+                waiting = false;
+                if (CheckPose(h))
+                {
+                    if (IsFocused())
+                    {
+                        // Focus stance: wait to see if this is a tap (bolt) or a hold (laser).
+                        waiting = true;
+                        pressTime = Time.time;
+                    }
+                    else
+                    {
+                        // Ring hand alone: every pull is an instant bolt.
+                        FireBolt(h);
+                    }
+                }
             }
 
-            if (waiting[i])
+            if (waiting)
             {
-                if (ctx.controller.IsHandBusy(mask))
+                if (ctx.controller.IsHandBusy(h.HandMask))
                 {
-                    waiting[i] = false;   // another move owns this hand
+                    waiting = false;   // another move (blast) took the hand
                 }
                 else if (!held)
                 {
-                    // Released quickly: that was a tap, so fire a single bolt.
-                    waiting[i] = false;
-                    if (armed[i]) FireBolt(h);
+                    waiting = false;
+                    FireBolt(h);
                 }
-                else if (Time.time - pressTime[i] >= holdDelay)
+                else if (Time.time - pressTime >= holdDelay)
                 {
-                    // Still held after the delay: that's a hold, so start the laser.
-                    waiting[i] = false;
-                    if (armed[i] && h.Velocity.magnitude <= startMaxHandSpeed) ready[i] = true;
-                    else if (armed[i]) MoveLog.Add("Laser " + MoveLog.HandName(h) + " skipped: hand moving");
+                    waiting = false;
+                    if (!IsFocused()) MoveLog.Add("Laser skipped: focus lost (hands " + HandGap().ToString("0.00") + " m apart)");
+                    else if (h.Velocity.magnitude > startMaxHandSpeed) MoveLog.Add("Laser skipped: hand moving");
+                    else ready = true;
                 }
             }
 
-            if (!held) ready[i] = false;
-            wasHeld[i] = held;
+            if (!held) ready = false;
+            wasHeld = held;
         }
 
         public override bool TryStart(int freeHands)
         {
-            if ((freeHands & LeftMask) != 0 && ready[0]) { ready[0] = false; return Begin(ctx.Left); }
-            if ((freeHands & RightMask) != 0 && ready[1]) { ready[1] = false; return Begin(ctx.Right); }
-            return false;
+            // The laser uses both hands: the ring hand fires, the off hand focuses.
+            if (!ready || (freeHands & BothMask) != BothMask) return false;
+            ready = false;
+            return Begin(ctx.RingHand);
         }
 
         // Checked once when the trigger is pulled. Returns true if this pull may fire; otherwise logs why not.
         private bool CheckPose(TrackedNode h)
         {
-            string who = "Laser " + MoveLog.HandName(h);
+            string who = "Ring";
             if (!h.IsTracked) return false;
+            if (ctx.controller.IsHandBusy(h.HandMask)) return false;
+            TrackedNode off = ctx.OffHand;
+            if (off != null && off.TriggerHeld) return false;   // both triggers: that's the charged blast
             if (h.Velocity.magnitude > startMaxHandSpeed) { MoveLog.Add(who + " skipped: hand moving"); return false; }
-            if ((ctx.Left.transform.position - ctx.Right.transform.position).magnitude < handsTogetherGap)
+            float gap = HandGap();
+            if (gap >= focusDistance && gap < handsTogetherGap)
             {
-                MoveLog.Add(who + " skipped: hands together");
+                MoveLog.Add(who + " skipped: hands half together (" + gap.ToString("0.00") + " m)");
                 return false;
             }
             float fwd = Gestures.ForwardDot(ctx.Head, h);
             if (fwd < minForwardDot) { MoveLog.Add(who + " skipped: not pointing fwd (" + fwd.ToString("0.00") + ")"); return false; }
-            if (!ctx.energy.CanAfford(minEnergyToStart))
+            if (!ctx.energy.CanAfford(Mathf.Min(boltCost, minEnergyToStart)))
             {
                 MoveLog.Add(who + " skipped: no energy");
                 h.Haptic(0.15f, 0.05f);
@@ -137,8 +166,7 @@ namespace RingFighter
 
         private void FireBolt(TrackedNode h)
         {
-            string who = "Bolt " + MoveLog.HandName(h);
-            if (!ctx.energy.TrySpend(boltCost)) { MoveLog.Add(who + " skipped: no energy"); return; }
+            if (!ctx.energy.TrySpend(boltCost)) { MoveLog.Add("Bolt skipped: no energy"); return; }
 
             Vector3 dir = h.AimForward;
             Vector3 origin = h.AimOrigin + dir * 0.12f;
@@ -146,14 +174,14 @@ namespace RingFighter
             if (aimAssistAngle > 0f) dir = AimAssist.Adjust(origin, dir, aimAssistAngle + 2f, out assisted);
             Projectile.Spawn(beamMaterial, origin, dir, boltSpeed, boltDamage, 0.07f, boltKnockback);
             h.Haptic(0.5f, 0.08f);
-            MoveLog.Add(who + " fired" + (assisted ? " (assist)" : ""));
+            MoveLog.Add("Bolt fired" + (assisted ? " (assist)" : ""));
         }
 
         private bool Begin(TrackedNode h)
         {
             hand = h;
             IsActive = true;
-            UsedHands = h.HandMask;
+            UsedHands = BothMask;
             startTime = Time.time;
             loggedHit = false;
 
@@ -164,7 +192,8 @@ namespace RingFighter
             t.name = "Laser Tip";
             tip = t.transform;
 
-            MoveLog.Add("Laser " + MoveLog.HandName(h) + " on");
+            if (ctx.OffHand != null) ctx.OffHand.Haptic(0.4f, 0.1f);
+            MoveLog.Add("Laser on (focused)");
             return true;
         }
 
@@ -181,6 +210,7 @@ namespace RingFighter
             if (!hand.TriggerHeld && minTimeDone) reason = "trigger released";
             else if (hand.Velocity.magnitude > breakHandSpeed) reason = "hand swinging";
             else if (Gestures.ForwardDot(ctx.Head, hand) < stayForwardDot) reason = "stopped pointing fwd";
+            else if (HandGap() > focusBreakDistance) reason = "focus lost";
             else if (!ctx.energy.Drain(drainPerSecond)) reason = "out of energy";
             if (reason != null)
             {

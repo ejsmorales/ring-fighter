@@ -57,11 +57,13 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 
 Priorities (set in the scene builder): Charged blast 30, Whirlwind 20, Shield 10, Laser 0.
 
-A trigger pull on the Laser Move is decided once: release within `holdDelay` (0.22 s) fires a single bolt; still
-held after that starts the laser. Neither happens if the pull is clearly for another move: the
-controller isn't pointing forward (blocking pose), the hand is swinging (whirlwind), or the hands are together
-(blast). Every skip is logged with its reason. While it runs it claims the hand, and it cuts out if the hand
-swings hard so a whirlwind can take over.
+**Ring hand / off hand.** `RingContext.RingHand` is null until the player picks it (RingController shows a prompt
+and runs no moves until a trigger is pulled); `RingContext.OffHand` is the other one. Moves that attack read only
+`RingHand`. The Laser Move: ring hand alone = each pull fires an instant bolt; with the off hand within
+`focusDistance` (focus stance) a pull waits `holdDelay`: release = bolt, still held = laser, which claims BOTH
+hands (`UsedHands = 3`) and stops if the hands drift past `focusBreakDistance`. Shield: either hand starts it; in
+`Tick` the other hand joining the pose merges it into a double shield (`IsDoubled`, `Strength`); `UsedHands`
+changes as arms join or drop. Skips are logged with reasons.
 
 Aim direction: `TrackedNode.AimForward` is the controller's forward tilted down by `aimPitchOffset`, because the
 raw controller axis points up the handle. The value is tuned in the headset (debug panel: A more, B less) and

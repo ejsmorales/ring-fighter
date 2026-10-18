@@ -3,7 +3,7 @@ using UnityEngine;
 namespace RingFighter
 {
     /// <summary>
-    /// Area attack: hold the trigger and swing your arm in circles to spin up a whirlwind that
+    /// Area attack (ring hand): hold the trigger and swing your arm in circles to spin up a whirlwind that
     /// drifts forward and shreds anything inside it. Keep circling to keep it alive; it drains energy.
     /// </summary>
     public class WhirlwindMove : Move
@@ -41,8 +41,9 @@ namespace RingFighter
 
         public override bool TryStart(int freeHands)
         {
-            if ((freeHands & LeftMask) != 0 && CanStart(ctx.Left)) return Begin(ctx.Left);
-            if ((freeHands & RightMask) != 0 && CanStart(ctx.Right)) return Begin(ctx.Right);
+            // Ring hand only: the off hand is for support.
+            TrackedNode r = ctx.RingHand;
+            if (r != null && (freeHands & r.HandMask) != 0 && CanStart(r)) return Begin(r);
             return false;
         }
 

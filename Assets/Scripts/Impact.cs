@@ -54,11 +54,7 @@ namespace RingFighter
             go.transform.position = point + Random.insideUnitSphere * 0.08f;
             TextMesh tm = go.AddComponent<TextMesh>();
             tm.text = Mathf.Max(1, Mathf.RoundToInt(amount)).ToString();
-            tm.characterSize = 0.04f + Mathf.Min(amount, 60f) * 0.0006f;
-            tm.fontSize = 64;
-            tm.anchor = TextAnchor.MiddleCenter;
-            tm.alignment = TextAlignment.Center;
-            tm.color = color;
+            Fx.SetupText(tm, 0.1f + Mathf.Min(amount, 60f) * 0.002f, color);
             Impact i = go.AddComponent<Impact>();
             i.kind = Kind.Number;
             i.life = 0.8f;

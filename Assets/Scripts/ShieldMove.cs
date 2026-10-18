@@ -3,9 +3,10 @@ using UnityEngine;
 namespace RingFighter
 {
     /// <summary>
-    /// Defense: raise your forearm in front of you to block (controller pointing up or sideways, not at the
-    /// opponent) and hold the trigger. A barrier appears in front of that hand, facing forward. Drains energy
-    /// while held. Opponents (later) can call Blocks() to see if a shot is stopped.
+    /// Defense, either hand: raise a forearm in front of you to block (controller pointing up or sideways, not at the
+    /// opponent) and hold the trigger. A barrier appears in front of that hand, facing forward. Raise the OTHER arm
+    /// into the same pose too and the two merge into one big, stronger shield between your hands. Drains energy
+    /// while held (more when doubled). Opponents (later) can call Blocks() and Strength.
     /// </summary>
     public class ShieldMove : Move
     {
@@ -13,6 +14,12 @@ namespace RingFighter
         public float drainPerSecond = 8f;
         public float minEnergyToStart = 5f;
         public float shieldRadius = 0.42f;
+        [Header("Two-handed shield")]
+        [Tooltip("Radius (meters) of the shield when both arms block.")]
+        public float doubleShieldRadius = 0.75f;
+        [Tooltip("Energy per second while both arms block.")]
+        public float doubleDrainPerSecond = 12f;
+        [Header("Pose rules")]
         [Tooltip("How far in front of the hand the barrier sits (meters).")]
         public float distanceFromHand = 0.18f;
         [Tooltip("To START a shield the controller must point forward less than this (1 = straight ahead). Lower = stricter.")]
@@ -24,12 +31,17 @@ namespace RingFighter
         [Tooltip("Trigger must be held this long in the blocking pose before the shield appears.")]
         public float holdDelay = 0.1f;
 
-        private TrackedNode hand;
+        private TrackedNode hand;     // first blocking hand
+        private TrackedNode second;   // other hand when doubled, else null
         private GameObject disc;
         private readonly float[] pressTime = new float[2];
         private readonly bool[] wasHeld = new bool[2];
 
         public bool IsBlocking { get { return IsActive && disc != null; } }
+        public bool IsDoubled { get { return IsBlocking && second != null; } }
+
+        /// <summary>How strong the shield is: 1 normally, 2 when both arms block (for future enemy attacks).</summary>
+        public float Strength { get { return IsDoubled ? 2f : (IsBlocking ? 1f : 0f); } }
 
         /// <summary>True if a world-space point is inside the shield disc (for future enemy attacks).</summary>
         public bool Blocks(Vector3 worldPoint)
@@ -60,58 +72,115 @@ namespace RingFighter
             wasHeld[i] = held;
         }
 
+        private int Index(TrackedNode h)
+        {
+            return h == ctx.Left ? 0 : 1;
+        }
+
         public override bool TryStart(int freeHands)
         {
-            if ((freeHands & LeftMask) != 0 && CanStart(ctx.Left, 0)) return Begin(ctx.Left);
-            if ((freeHands & RightMask) != 0 && CanStart(ctx.Right, 1)) return Begin(ctx.Right);
+            bool l = (freeHands & LeftMask) != 0 && CanStart(ctx.Left);
+            bool r = (freeHands & RightMask) != 0 && CanStart(ctx.Right);
+            if (l && r) return Begin(ctx.Left, ctx.Right);
+            if (l) return Begin(ctx.Left, null);
+            if (r) return Begin(ctx.Right, null);
             return false;
         }
 
-        private bool CanStart(TrackedNode h, int index)
+        private bool CanStart(TrackedNode h)
         {
             return h != null && h.IsTracked && h.TriggerHeld
-                && Time.time - pressTime[index] >= holdDelay
+                && Time.time - pressTime[Index(h)] >= holdDelay
                 && Gestures.IsGuarding(ctx.Head, h, startMaxForwardDot)
                 && h.Velocity.magnitude < startMaxSpeed
                 && ctx.energy.CanAfford(minEnergyToStart);
         }
 
-        private bool Begin(TrackedNode h)
+        private bool StillBlocking(TrackedNode h, out string reason)
         {
-            hand = h;
+            reason = null;
+            if (h == null || !h.IsTracked) reason = "lost tracking";
+            else if (!h.TriggerHeld) reason = "trigger released";
+            else if (!Gestures.IsGuarding(ctx.Head, h, stayMaxForwardDot)) reason = "left blocking pose";
+            return reason == null;
+        }
+
+        private bool Begin(TrackedNode first, TrackedNode other)
+        {
+            hand = first;
+            second = other;
             IsActive = true;
-            UsedHands = h.HandMask;
-            disc = Fx.Shape(PrimitiveType.Cylinder, shieldMaterial, new Vector3(shieldRadius * 2f, 0.01f, shieldRadius * 2f));
+            disc = Fx.Shape(PrimitiveType.Cylinder, shieldMaterial, Vector3.one);
             disc.name = "Energy Shield";
-            PlaceDisc();
+            UpdateShape();
             hand.Haptic(0.3f, 0.1f);
-            MoveLog.Add("Shield " + MoveLog.HandName(h) + " up");
+            if (second != null) second.Haptic(0.3f, 0.1f);
+            MoveLog.Add(second != null ? "Shield up (BOTH arms)" : "Shield " + MoveLog.HandName(first) + " up");
             return true;
         }
 
         public override void Tick()
         {
-            string reason = null;
-            if (hand == null || !hand.IsTracked) reason = "lost tracking";
-            else if (!hand.TriggerHeld) reason = "trigger released";
-            else if (!Gestures.IsGuarding(ctx.Head, hand, stayMaxForwardDot)) reason = "left blocking pose";
-            else if (!ctx.energy.Drain(drainPerSecond)) reason = "out of energy";
+            string reason;
+            bool firstOk = StillBlocking(hand, out reason);
+            string secondReason;
+            bool secondOk = second != null && StillBlocking(second, out secondReason);
 
-            if (reason != null)
+            if (!firstOk && secondOk)
             {
-                MoveLog.Add("Shield " + MoveLog.HandName(hand) + " down: " + reason);
+                // The first arm dropped but the second is still up: keep a single shield on it.
+                hand = second;
+                second = null;
+                firstOk = true;
+                MoveLog.Add("Shield back to one arm");
+            }
+            else if (second != null && !secondOk)
+            {
+                second = null;
+                MoveLog.Add("Shield back to one arm");
+            }
+
+            if (!firstOk)
+            {
+                MoveLog.Add("Shield down: " + reason);
                 Finish();
                 return;
             }
-            PlaceDisc();
+
+            // Raise the other arm into the blocking pose to merge into one big shield.
+            if (second == null)
+            {
+                TrackedNode other = hand == ctx.Left ? ctx.Right : ctx.Left;
+                if (other != null && !ctx.controller.IsHandBusy(other.HandMask) && CanStart(other))
+                {
+                    second = other;
+                    other.Haptic(0.5f, 0.12f);
+                    hand.Haptic(0.5f, 0.12f);
+                    MoveLog.Add("Shield DOUBLED (both arms)");
+                }
+            }
+
+            if (!ctx.energy.Drain(second != null ? doubleDrainPerSecond : drainPerSecond))
+            {
+                MoveLog.Add("Shield down: out of energy");
+                Finish();
+                return;
+            }
+            UpdateShape();
         }
 
-        private void PlaceDisc()
+        private void UpdateShape()
         {
             if (disc == null || hand == null) return;
+            UsedHands = hand.HandMask | (second != null ? second.HandMask : 0);
+
+            float radius = second != null ? doubleShieldRadius : shieldRadius;
+            disc.transform.localScale = new Vector3(radius * 2f, 0.01f, radius * 2f);
+
             // Face the barrier the way the player is facing, so it covers them no matter how the wrist is turned.
             Vector3 forward = Gestures.FlatForward(ctx.Head);
-            disc.transform.position = hand.transform.position + forward * distanceFromHand;
+            Vector3 center = second != null ? (hand.transform.position + second.transform.position) * 0.5f : hand.transform.position;
+            disc.transform.position = center + forward * distanceFromHand;
             // Cylinders stand along their local Y axis, so tip it to face forward.
             disc.transform.rotation = Quaternion.LookRotation(forward) * Quaternion.Euler(90f, 0f, 0f);
         }
@@ -121,6 +190,7 @@ namespace RingFighter
             if (disc != null) Destroy(disc);
             disc = null;
             hand = null;
+            second = null;
         }
     }
 }

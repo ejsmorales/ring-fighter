@@ -13,6 +13,7 @@
 #>
 param(
     [string]$Apk,
+    [string]$Ip,            # headset address to reconnect to if no cable is attached (remembered between runs)
     [int]$Port = 5555
 )
 
@@ -68,6 +69,20 @@ $usb = $devices | Where-Object { $_.State -eq 'device' -and $_.Serial -notmatch 
 $wifi = $devices | Where-Object { $_.State -eq 'device' -and $_.Serial -match ':' } | Select-Object -First 1
 $target = $null
 
+# The headset stays in wireless mode until it restarts, but each computer has to connect to it itself.
+# With no cable attached, try the address given with -Ip, or the one remembered from the last run.
+$ipFile = Join-Path $env:LOCALAPPDATA 'RingFighter\quest-ip.txt'
+if (-not $usb -and -not $wifi) {
+    if (-not $Ip -and (Test-Path $ipFile)) { $Ip = (Get-Content $ipFile -Raw).Trim() }
+    if ($Ip) {
+        Write-Host "No cable found. Trying to reconnect to ${Ip}:$Port ..."
+        $out = & $adb connect "${Ip}:$Port"
+        Write-Host $out
+        $devices = Get-Devices $adb
+        $wifi = $devices | Where-Object { $_.State -eq 'device' -and $_.Serial -match ':' } | Select-Object -First 1
+    }
+}
+
 if ($usb) {
     Write-Host "Quest found over USB ($($usb.Serial))."
     $ipOut = (& $adb -s $usb.Serial shell ip -f inet addr show wlan0) -join "`n"
@@ -87,6 +102,8 @@ if ($usb) {
         Write-Host 'Wireless connection failed. Check the PC and headset are on the same Wi-Fi network.' -ForegroundColor Red
         exit 1
     }
+    New-Item -ItemType Directory -Force -Path (Split-Path $ipFile) | Out-Null
+    Set-Content -Path $ipFile -Value $ip
     Write-Host 'Wireless ADB is ready. You can unplug the cable now.' -ForegroundColor Green
 }
 elseif ($wifi) {
@@ -94,8 +111,10 @@ elseif ($wifi) {
     Write-Host "Already connected wirelessly ($target)." -ForegroundColor Green
 }
 else {
-    Write-Host 'No Quest found. Plug it in with the USB cable, put the headset on and allow USB debugging, then run this again.' -ForegroundColor Red
-    Write-Host '(If it was connected wirelessly before, the IP may have changed or the headset restarted. The cable step fixes that.)'
+    Write-Host 'No Quest found. What adb currently sees:' -ForegroundColor Red
+    & $adb devices
+    Write-Host 'Plug the Quest in with the USB cable, put the headset on and allow USB debugging, then run this again.'
+    Write-Host '(A wireless connection also fails if the headset restarted, went to sleep, or its IP address changed. The cable step fixes that. You can also try: -Ip 192.168.x.x)'
     exit 1
 }
 

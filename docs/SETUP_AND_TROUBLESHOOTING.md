@@ -56,7 +56,9 @@ It finds `adb` (on PATH, in the Unity Hub editor folders, or via `ANDROID_HOME`)
 address, switches it to wireless mode and connects. Then unplug the cable. Add `-Apk C:\path\to\file.apk` to
 install a build as well (installs over the old copy, so saved settings survive).
 
-Run it again whenever the headset restarts or its address changes. In Unity, open File > Build Profiles >
+Wireless mode lives on the headset until it restarts, but **each computer must connect to it itself**: running
+the script on a second PC with no cable reconnects to the address remembered from the last run (or pass
+`-Ip 192.168.x.x`). Run it with the cable again whenever the headset restarts or its address changes. In Unity, open File > Build Profiles >
 Android and choose the wireless entry (the IP address) under Run Device, then Build And Run. The Run Device
 choice is per computer and has to be picked on each machine. The script is untested on a real machine so far:
 if it errors, paste the message to Claude.

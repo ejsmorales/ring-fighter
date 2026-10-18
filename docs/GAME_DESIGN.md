@@ -25,7 +25,7 @@ making motions with your arms creates glowing energy constructs: offensive, defe
 
 | Move | Type | Input | Cost |
 | --- | --- | --- | --- |
-| Energy laser | Offense | Point forward and hold the trigger: continuous beam. A tap gives a short flash. Stops if you stop pointing forward or swing the hand hard | 20/sec while firing |
+| Energy bolt / laser | Offense | Point forward and **tap** the trigger for a single bolt (6 energy). **Hold** it past ~0.22 s for a continuous laser. The laser stops if you stop pointing forward or swing the hand hard | Bolt 6; laser 20/sec |
 | Charged blast | Offense | Both triggers held, hands together off to one side; release to fire where you're looking. Longer charge = bigger | Drains while charging |
 | Shield | Defense | Raise your forearm to block (controller pointing up or sideways, not at the opponent) and hold the trigger | Drains while held |
 | Whirlwind | Offense (area) | Hold trigger and circle your arm | Drains while active |
@@ -38,6 +38,13 @@ curves shots that are close to the target (bolt 9°, blast 14°).
 
 - **Construct punch**: trigger + A button + upward motion throws a giant glowing fist.
 - More two-hand combos using both controllers together.
+- **Ring Nova** (idea from the owner, 2026-10-18): hold both triggers AND both grips (all four), hands start
+  up by the shoulders, sweep both down to the hips in one motion: a green explosion around the player that
+  damages nearby enemies and blocks/knocks away incoming shots. Needs: enemy attacks to exist first (roadmap 3),
+  a big energy cost or cooldown, and a deliberate-squeeze grip threshold so just holding the controllers doesn't count.
+- **Controller input vocabulary** (what can be combined): index trigger, grip (middle finger), A/B on the right,
+  X/Y on the left, thumbstick (tilt and click). The menu/Oculus buttons belong to the system. Y currently
+  toggles the debug panel; A/B tune the aim tilt while the panel shows.
 - Neutral moves (for example, recharge stance, grab/pull, construct wall).
 
 ## Roadmap
@@ -88,3 +95,12 @@ Record each headset session here: date, build, what worked, what didn't.
     Raise the offset if you still have to bend down; lower it if shots land low.
   - **Decision:** replace the single bolt with a held laser that burns energy. Implemented as `LaserMove`
     (the old `EnergyBoltMove` script is kept but no longer used). Open idea: beam hum/loop sound.
+
+- **2026-10-18 (evening) — laser build.** Feels better. Findings and changes (all untested):
+  - Bolt/laser still needed a bent controller to aim. **Change:** default aim tilt raised 50 to 65 degrees, and
+    it can now be tuned in the headset: with the debug panel showing, **A** (right controller) tilts the aim
+    5 degrees more, **B** 5 less. The value is saved on the headset (reinstalling the app resets it to the default).
+    Once it feels right, tell Claude the number shown on the panel and it becomes the default.
+  - The laser fired the instant the trigger was pulled, so there was no single shot. **Change:** the trigger now
+    decides on release or after 0.22 s: release sooner = single bolt, keep holding = laser. `Hold Delay` on the
+    Laser Move component tunes it.

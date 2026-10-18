@@ -3,10 +3,10 @@ using UnityEngine;
 namespace RingFighter
 {
     /// <summary>
-    /// Basic attack: point forward and hold the trigger to fire a continuous energy laser. It burns ring
-    /// energy while it's on, hurts the first target it touches, and stops when you let go, stop pointing
-    /// forward, swing the hand hard (that's a whirlwind), or run dry. A quick tap gives a short flash of beam.
-    /// Replaces the old single energy bolt (EnergyBoltMove is still in the project but no longer used).
+    /// Basic attack: point forward and tap the trigger for a single energy bolt, or keep holding it past a short delay for a
+    /// continuous laser. The laser burns ring energy while it's on, hurts the first target it touches, and stops
+    /// when you let go, stop pointing forward, swing the hand hard (that's a whirlwind), or run dry.
+    /// Replaces EnergyBoltMove, which is still in the project but no longer used.
     /// </summary>
     public class LaserMove : Move
     {
@@ -19,8 +19,16 @@ namespace RingFighter
         public float range = 25f;
         public float beamWidth = 0.025f;
         public float knockbackPerSecond = 2f;
-        [Tooltip("Even a quick tap keeps the beam on this long (seconds).")]
+        [Tooltip("Trigger must stay held this long (seconds) before the laser starts. Releasing sooner fires a single bolt.")]
+        public float holdDelay = 0.22f;
+        [Tooltip("Once the laser is on, it stays on at least this long (seconds).")]
         public float minBurstTime = 0.12f;
+
+        [Header("Single bolt (quick tap)")]
+        public float boltCost = 6f;
+        public float boltDamage = 10f;
+        public float boltSpeed = 22f;
+        public float boltKnockback = 2.5f;
 
         [Header("Pose rules")]
         [Tooltip("Controller must point at least this much forward to start (1 = straight ahead).")]
@@ -37,7 +45,10 @@ namespace RingFighter
         public float aimAssistAngle = 7f;
 
         private readonly bool[] wasHeld = new bool[2];
-        private readonly bool[] pressed = new bool[2];   // trigger was just pulled and not yet used
+        private readonly bool[] waiting = new bool[2];    // trigger pulled, still deciding tap or hold
+        private readonly bool[] armed = new bool[2];      // pose was good when the trigger was pulled
+        private readonly bool[] ready = new bool[2];      // hold confirmed: start the laser
+        private readonly float[] pressTime = new float[2];
 
         private TrackedNode hand;
         private float startTime;
@@ -53,33 +64,58 @@ namespace RingFighter
         public override void Observe()
         {
             if (ctx == null) return;
-            Track(0, ctx.Left);
-            Track(1, ctx.Right);
-            // A pull that another move (shield, whirlwind, blast) owns must not fire the laser later.
-            if (ctx.controller.IsHandBusy(LeftMask) && !(IsActive && UsedHands == LeftMask)) pressed[0] = false;
-            if (ctx.controller.IsHandBusy(RightMask) && !(IsActive && UsedHands == RightMask)) pressed[1] = false;
+            Track(0, ctx.Left, LeftMask);
+            Track(1, ctx.Right, RightMask);
         }
 
-        private void Track(int i, TrackedNode h)
+        private void Track(int i, TrackedNode h, int mask)
         {
             if (h == null) return;
             bool held = h.TriggerHeld;
-            if (held && !wasHeld[i]) pressed[i] = true;
-            if (!held) pressed[i] = false;
+
+            if (held && !wasHeld[i])
+            {
+                waiting[i] = true;
+                ready[i] = false;
+                pressTime[i] = Time.time;
+                armed[i] = CheckPose(h);
+            }
+
+            if (waiting[i])
+            {
+                if (ctx.controller.IsHandBusy(mask))
+                {
+                    waiting[i] = false;   // another move owns this hand
+                }
+                else if (!held)
+                {
+                    // Released quickly: that was a tap, so fire a single bolt.
+                    waiting[i] = false;
+                    if (armed[i]) FireBolt(h);
+                }
+                else if (Time.time - pressTime[i] >= holdDelay)
+                {
+                    // Still held after the delay: that's a hold, so start the laser.
+                    waiting[i] = false;
+                    if (armed[i] && h.Velocity.magnitude <= startMaxHandSpeed) ready[i] = true;
+                    else if (armed[i]) MoveLog.Add("Laser " + MoveLog.HandName(h) + " skipped: hand moving");
+                }
+            }
+
+            if (!held) ready[i] = false;
             wasHeld[i] = held;
         }
 
         public override bool TryStart(int freeHands)
         {
-            if ((freeHands & LeftMask) != 0 && pressed[0] && Evaluate(0, ctx.Left)) return Begin(ctx.Left);
-            if ((freeHands & RightMask) != 0 && pressed[1] && Evaluate(1, ctx.Right)) return Begin(ctx.Right);
+            if ((freeHands & LeftMask) != 0 && ready[0]) { ready[0] = false; return Begin(ctx.Left); }
+            if ((freeHands & RightMask) != 0 && ready[1]) { ready[1] = false; return Begin(ctx.Right); }
             return false;
         }
 
-        // Called once per trigger pull. Returns true if the laser should fire; otherwise logs why not.
-        private bool Evaluate(int i, TrackedNode h)
+        // Checked once when the trigger is pulled. Returns true if this pull may fire; otherwise logs why not.
+        private bool CheckPose(TrackedNode h)
         {
-            pressed[i] = false;   // one decision per pull
             string who = "Laser " + MoveLog.HandName(h);
             if (!h.IsTracked) return false;
             if (h.Velocity.magnitude > startMaxHandSpeed) { MoveLog.Add(who + " skipped: hand moving"); return false; }
@@ -97,6 +133,20 @@ namespace RingFighter
                 return false;
             }
             return true;
+        }
+
+        private void FireBolt(TrackedNode h)
+        {
+            string who = "Bolt " + MoveLog.HandName(h);
+            if (!ctx.energy.TrySpend(boltCost)) { MoveLog.Add(who + " skipped: no energy"); return; }
+
+            Vector3 dir = h.AimForward;
+            Vector3 origin = h.AimOrigin + dir * 0.12f;
+            bool assisted = false;
+            if (aimAssistAngle > 0f) dir = AimAssist.Adjust(origin, dir, aimAssistAngle + 2f, out assisted);
+            Projectile.Spawn(beamMaterial, origin, dir, boltSpeed, boltDamage, 0.07f, boltKnockback);
+            h.Haptic(0.5f, 0.08f);
+            MoveLog.Add(who + " fired" + (assisted ? " (assist)" : ""));
         }
 
         private bool Begin(TrackedNode h)

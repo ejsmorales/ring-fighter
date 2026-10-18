@@ -54,13 +54,15 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 
 Priorities (set in the scene builder): Charged blast 30, Whirlwind 20, Shield 10, Laser 0.
 
-The laser starts on a trigger pull (one decision per pull) unless the pull is clearly for another move: the
+A trigger pull on the Laser Move is decided once: release within `holdDelay` (0.22 s) fires a single bolt; still
+held after that starts the laser. Neither happens if the pull is clearly for another move: the
 controller isn't pointing forward (blocking pose), the hand is swinging (whirlwind), or the hands are together
 (blast). Every skip is logged with its reason. While it runs it claims the hand, and it cuts out if the hand
 swings hard so a whirlwind can take over.
 
 Aim direction: `TrackedNode.AimForward` is the controller's forward tilted down by `aimPitchOffset`, because the
-raw controller axis points up the handle. All pose checks (laser, shield) use this same direction.
+raw controller axis points up the handle. The value is tuned in the headset (debug panel: A more, B less) and
+saved in PlayerPrefs under `RF_AimPitch`. All pose checks (laser, shield) use this same direction.
 
 ## Tuning workflow
 

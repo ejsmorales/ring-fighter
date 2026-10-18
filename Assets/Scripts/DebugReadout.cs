@@ -22,6 +22,8 @@ namespace RingFighter
         private GameObject panel;
         private float nextRefresh;
         private bool yWasHeld;
+        private bool aWasHeld;
+        private bool bWasHeld;
         private readonly StringBuilder sb = new StringBuilder(1024);
 
         public void Init(RingContext context)
@@ -76,15 +78,39 @@ namespace RingFighter
             if (y && !yWasHeld) panel.SetActive(!panel.activeSelf);
             yWasHeld = y;
 
+            // While the panel is showing: A (right controller) tilts the aim down 5 more degrees, B tilts it back up.
+            // Use it to find the angle where a relaxed wrist points at the dummy. The value is remembered.
+            if (panel.activeSelf && ctx.Right != null)
+            {
+                bool a = ctx.Right.PrimaryButton;
+                bool b = ctx.Right.SecondaryButton;
+                if (a && !aWasHeld) AdjustAimPitch(5f);
+                if (b && !bWasHeld) AdjustAimPitch(-5f);
+                aWasHeld = a;
+                bWasHeld = b;
+            }
+
             if (!panel.activeSelf || Time.time < nextRefresh) return;
             nextRefresh = Time.time + refreshInterval;
             text.text = Compose();
+        }
+
+        private void AdjustAimPitch(float delta)
+        {
+            float value = Mathf.Clamp(ctx.Right.aimPitchOffset + delta, 0f, 120f);
+            if (ctx.Left != null) ctx.Left.aimPitchOffset = value;
+            ctx.Right.aimPitchOffset = value;
+            PlayerPrefs.SetFloat(TrackedNode.AimPitchPrefKey, value);
+            PlayerPrefs.Save();
+            MoveLog.Add("Aim tilt set to " + Mathf.RoundToInt(value));
         }
 
         private string Compose()
         {
             sb.Length = 0;
             sb.Append("RING DEBUG   (Y = hide)\n");
+            if (ctx.Right != null)
+                sb.Append("Aim tilt ").Append(Mathf.RoundToInt(ctx.Right.aimPitchOffset)).Append("  (A = more, B = less)\n");
             sb.Append("Energy ").Append(Mathf.RoundToInt(ctx.energy.Current)).Append(" / ").Append(Mathf.RoundToInt(ctx.energy.max)).Append('\n');
 
             sb.Append("Active: ");

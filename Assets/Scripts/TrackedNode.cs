@@ -35,7 +35,7 @@ namespace RingFighter
 
         [Tooltip("Tilts the pointing direction downward (degrees) so a relaxed wrist points straight ahead. " +
                  "Raise it if you still have to bend the controller down to aim; lower it (or go negative) if shots go too low.")]
-        public float aimPitchOffset = 50f;
+        public float aimPitchOffset = 65f;
 
         public Vector3 AimForward
         {
@@ -75,6 +75,16 @@ namespace RingFighter
                     default: return XRNode.Head;
                 }
             }
+        }
+
+        /// <summary>Key used to remember the aim tilt that was tuned in the headset.</summary>
+        public const string AimPitchPrefKey = "RF_AimPitch";
+
+        private void Awake()
+        {
+            // A value tuned in the headset (A / B buttons while the debug panel is showing) wins over the default.
+            if (IsHand && PlayerPrefs.HasKey(AimPitchPrefKey))
+                aimPitchOffset = PlayerPrefs.GetFloat(AimPitchPrefKey);
         }
 
         private void OnEnable()

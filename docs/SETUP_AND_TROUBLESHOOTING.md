@@ -63,3 +63,9 @@ Android and choose the wireless entry (the IP address) under Run Device, then Bu
 choice is per computer and has to be picked on each machine. The script is untested on a real machine so far:
 if it errors, paste the message to Claude.
 
+## Attacks pass through the dummy
+
+Open the debug panel (Y). The top line shows the startup physics self-test. Fire at the dummy and read "Recent":
+`HIT ...` means damage landed; `Shot hit Floor (not a target)` means the shot went low (aim tilt, A/B);
+`Shot missed (expired)` means it flew past. Since 2026-10-18, hits use `HitShapes` math as well as physics.
+

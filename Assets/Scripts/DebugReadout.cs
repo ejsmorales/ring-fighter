@@ -109,6 +109,7 @@ namespace RingFighter
         {
             sb.Length = 0;
             sb.Append("RING DEBUG   (Y = hide)\n");
+            if (!string.IsNullOrEmpty(MoveLog.Status)) sb.Append(MoveLog.Status).Append('\n');
             if (ctx.Right != null)
                 sb.Append("Aim tilt ").Append(Mathf.RoundToInt(ctx.Right.aimPitchOffset)).Append("  (A = more, B = less)\n");
             sb.Append("Energy ").Append(Mathf.RoundToInt(ctx.energy.Current)).Append(" / ").Append(Mathf.RoundToInt(ctx.energy.max)).Append('\n');

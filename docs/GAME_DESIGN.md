@@ -104,3 +104,9 @@ Record each headset session here: date, build, what worked, what didn't.
   - The laser fired the instant the trigger was pulled, so there was no single shot. **Change:** the trigger now
     decides on release or after 0.22 s: release sooner = single bolt, keep holding = laser. `Hold Delay` on the
     Laser Move component tunes it.
+  - Dummy still took no damage (third build in a row). Root cause still unconfirmed (no debug-panel log yet).
+    **Change (untested):** hits no longer depend on Unity physics. Each target registers an invisible capsule
+    (`HitShapes`) and shots, the laser and the whirlwind test it with plain math. Also: the dummy's Rigidbody and a
+    hit collider are now saved in the scene, `Assets/link.xml` stops the build stripping physics code, and the
+    debug panel's top line shows a startup physics self-test ("physics test OK / FAILED").
+

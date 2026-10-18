@@ -39,11 +39,29 @@ namespace RingFighter
 
             float step = speed * Time.deltaTime;
             Vector3 dir = transform.forward;
-            RaycastHit hit;
-            // Moving targets change position in Update, so push those changes to the physics system first.
+            Vector3 from = transform.position;
+
+            // 1) Targets, by plain math (works even if colliders are missing in a build).
+            IDamageable shapeTarget;
+            Vector3 shapePoint;
+            float fraction;
+            bool shapeHit = HitShapes.Segment(from, from + dir * step, radius, out shapeTarget, out shapePoint, out fraction);
+            float shapeDist = shapeHit ? fraction * step : float.MaxValue;
+
+            // 2) Everything else (floor, walls) through physics.
             Physics.SyncTransforms();
-            // SphereCast instead of relying on physics collisions, so fast shots never skip through targets.
-            if (Physics.SphereCast(transform.position, radius, dir, out hit, step, ~0, QueryTriggerInteraction.Ignore))
+            RaycastHit hit;
+            bool physHit = Physics.SphereCast(from, radius, dir, out hit, step, ~0, QueryTriggerInteraction.Ignore);
+            float physDist = physHit ? hit.distance : float.MaxValue;
+
+            if (shapeHit && shapeDist <= physDist)
+            {
+                shapeTarget.TakeDamage(damage, shapePoint, dir * knockback);
+                MoveLog.Add("HIT for " + Mathf.RoundToInt(damage));
+                Destroy(gameObject);
+                return;
+            }
+            if (physHit)
             {
                 IDamageable target = hit.collider.GetComponentInParent<IDamageable>();
                 if (target != null && target.IsAlive)

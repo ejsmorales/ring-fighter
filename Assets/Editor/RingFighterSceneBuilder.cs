@@ -123,6 +123,14 @@ namespace RingFighter.EditorTools
             dummy.healthBarMaterial = healthFill;
             dummy.healthBarBackMaterial = healthBack;
             dummy.lookTarget = camGo.transform;
+            // Saved into the scene (not only added at runtime) so the build can't strip them out.
+            Rigidbody dummyBody = dummyGo.AddComponent<Rigidbody>();
+            dummyBody.isKinematic = true;
+            dummyBody.useGravity = false;
+            CapsuleCollider dummyHit = dummyGo.AddComponent<CapsuleCollider>();
+            dummyHit.center = new Vector3(0f, 1.1f, 0f);
+            dummyHit.height = 2.2f;
+            dummyHit.radius = 0.35f;
 
             // ---- Save and register ----
             EditorSceneManager.SaveScene(scene, ScenePath);

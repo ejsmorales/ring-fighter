@@ -13,6 +13,9 @@ namespace RingFighter
         private static int head;
         private static int count;
 
+        /// <summary>One line pinned at the top of the debug readout (for example the startup physics check).</summary>
+        public static string Status;
+
         public static void Add(string message)
         {
             entries[head] = Time.time.ToString("0.0") + "s  " + message;

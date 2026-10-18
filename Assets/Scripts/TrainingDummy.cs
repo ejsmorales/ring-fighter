@@ -25,6 +25,12 @@ namespace RingFighter
         public Material healthBarBackMaterial;
         public GameObject visualsRoot; // optional: your own model instead of the placeholder shapes
 
+        [Header("Hit area")]
+        [Tooltip("Radius (meters) of the invisible capsule that attacks test against.")]
+        public float hitRadius = 0.35f;
+        [Tooltip("Height (meters) of the invisible capsule that attacks test against.")]
+        public float hitHeight = 2.15f;
+
         public bool IsAlive { get; private set; }
         public float Health { get; private set; }
 
@@ -52,9 +58,14 @@ namespace RingFighter
             BuildVisuals();
 
             // A kinematic Rigidbody tells physics this object moves, so hit tests use its current position.
-            Rigidbody rb = gameObject.AddComponent<Rigidbody>();
+            // The scene builder adds one; this covers dummies placed by hand.
+            Rigidbody rb = GetComponent<Rigidbody>();
+            if (rb == null) rb = gameObject.AddComponent<Rigidbody>();
             rb.isKinematic = true;
             rb.useGravity = false;
+
+            // Attacks also test this capsule with plain math, so hits work even without colliders.
+            HitShapes.Register(this, transform, hitRadius, hitHeight);
 
             // Chest-height point that aim assist steers shots toward.
             aimPoint = new GameObject("Aim Point").transform;
@@ -68,6 +79,25 @@ namespace RingFighter
         private void OnDestroy()
         {
             if (aimPoint != null) AimAssist.Unregister(aimPoint);
+            HitShapes.Unregister(this);
+        }
+
+        private void Start()
+        {
+            Invoke(nameof(PhysicsSelfTest), 0.5f);
+        }
+
+        // Fires a test ray at itself and reports the result on the debug panel, so a build that lost its
+        // colliders is obvious. Hits still work through HitShapes either way.
+        private void PhysicsSelfTest()
+        {
+            int colliders = GetComponentsInChildren<Collider>().Length;
+            Physics.SyncTransforms();
+            Vector3 origin = transform.position + Vector3.up * 1.0f - transform.forward * 2.5f;
+            RaycastHit hit;
+            bool ok = Physics.Raycast(origin, transform.forward, out hit, 5f, ~0, QueryTriggerInteraction.Ignore)
+                      && hit.collider.GetComponentInParent<TrainingDummy>() == this;
+            MoveLog.Status = "Dummy colliders " + colliders + ", physics test " + (ok ? "OK" : "FAILED") + " (hits use backup)";
         }
 
         private void BuildVisuals()

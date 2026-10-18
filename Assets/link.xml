@@ -1,0 +1,4 @@
+<!-- Keeps Unity's build from stripping physics code that is only used from scripts at runtime. -->
+<linker>
+  <assembly fullname="UnityEngine.PhysicsModule" preserve="all"/>
+</linker>

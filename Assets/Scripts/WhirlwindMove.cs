@@ -31,6 +31,8 @@ namespace RingFighter
 
         private readonly Collider[] overlap = new Collider[24];
         private readonly System.Collections.Generic.List<IDamageable> hitThisFrame = new System.Collections.Generic.List<IDamageable>();
+        private readonly System.Collections.Generic.List<Vector3> hitPoints = new System.Collections.Generic.List<Vector3>();
+        private bool loggedHit;
 
         private void Reset()
         {
@@ -59,6 +61,7 @@ namespace RingFighter
             UsedHands = h.HandMask;
             startTime = Time.time;
             lastCircleTime = Time.time;
+            loggedHit = false;
             direction = ctx.rig.FlatForward();
 
             root = new GameObject("Whirlwind");
@@ -115,19 +118,35 @@ namespace RingFighter
         private void DamageInside()
         {
             Vector3 center = root.transform.position + Vector3.up * 1.0f;
-            int count = Physics.OverlapSphereNonAlloc(center, radius, overlap, ~0, QueryTriggerInteraction.Ignore);
             hitThisFrame.Clear();
+            hitPoints.Clear();
+
+            // Targets by plain math first (works even if colliders are missing in a build).
+            HitShapes.Overlap(center, radius, hitThisFrame, hitPoints);
+            for (int i = 0; i < hitThisFrame.Count; i++)
+                Hurt(hitThisFrame[i], hitPoints[i], center);
+
+            int count = Physics.OverlapSphereNonAlloc(center, radius, overlap, ~0, QueryTriggerInteraction.Ignore);
             for (int i = 0; i < count; i++)
             {
                 IDamageable target = overlap[i].GetComponentInParent<IDamageable>();
                 if (target == null || !target.IsAlive || hitThisFrame.Contains(target)) continue;
                 hitThisFrame.Add(target);
 
-                Vector3 point = overlap[i].ClosestPoint(center);
-                Vector3 push = (point - center);
-                push.y = 0f;
-                push = push.sqrMagnitude > 0.0001f ? push.normalized * 2f : direction;
-                target.TakeDamage(damagePerSecond * Time.deltaTime, point, push);
+                Hurt(target, overlap[i].ClosestPoint(center), center);
+            }
+        }
+
+        private void Hurt(IDamageable target, Vector3 point, Vector3 center)
+        {
+            Vector3 push = point - center;
+            push.y = 0f;
+            push = push.sqrMagnitude > 0.0001f ? push.normalized * 2f : direction;
+            target.TakeDamage(damagePerSecond * Time.deltaTime, point, push);
+            if (!loggedHit)
+            {
+                loggedHit = true;
+                MoveLog.Add("Whirlwind HIT");
             }
         }
 

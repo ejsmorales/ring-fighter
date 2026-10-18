@@ -198,20 +198,47 @@ namespace RingFighter
             }
 
             Vector3 end = origin + dir * range;
+            IDamageable target = null;
+            Vector3 hitPoint = end;
+            string hitName = null;
+
+            IDamageable shapeTarget;
+            Vector3 shapePoint;
+            float fraction;
+            bool shapeHit = HitShapes.Segment(origin, end, beamWidth, out shapeTarget, out shapePoint, out fraction);
+            float shapeDist = shapeHit ? fraction * range : float.MaxValue;
+
             Physics.SyncTransforms();
             RaycastHit hit;
-            if (Physics.SphereCast(origin, beamWidth, dir, out hit, range, ~0, QueryTriggerInteraction.Ignore))
+            bool physHit = Physics.SphereCast(origin, beamWidth, dir, out hit, range, ~0, QueryTriggerInteraction.Ignore);
+            float physDist = physHit ? hit.distance : float.MaxValue;
+
+            if (shapeHit && shapeDist <= physDist)
+            {
+                target = shapeTarget;
+                hitPoint = shapePoint;
+                end = origin + dir * shapeDist;
+                hitName = "target";
+            }
+            else if (physHit)
             {
                 end = hit.point;
-                IDamageable target = hit.collider.GetComponentInParent<IDamageable>();
-                if (target != null && target.IsAlive)
+                hitPoint = hit.point;
+                IDamageable t = hit.collider.GetComponentInParent<IDamageable>();
+                if (t != null && t.IsAlive)
                 {
-                    target.TakeDamage(damagePerSecond * Time.deltaTime, hit.point, dir * (knockbackPerSecond * Time.deltaTime));
-                    if (!loggedHit)
-                    {
-                        loggedHit = true;
-                        MoveLog.Add("Laser HIT " + hit.collider.name);
-                    }
+                    target = t;
+                    hitName = hit.collider.name;
+                }
+            }
+
+            if (target != null)
+            {
+                target.TakeDamage(damagePerSecond * Time.deltaTime, hitPoint, dir * (knockbackPerSecond * Time.deltaTime));
+                if (!loggedHit)
+                {
+                    loggedHit = true;
+                    MoveLog.Add("Laser HIT " + hitName);
                 }
             }
 

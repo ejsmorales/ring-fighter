@@ -85,3 +85,9 @@ builds `Builds\RingFighter.apk`, then installs it over USB and starts the game. 
 prints the error lines from `Builds\unity-build.log`. The first run on a machine is slow (Unity imports the
 project); later runs are faster. Untested on a real machine so far.
 
+
+### build-quest.bat: build OK, then 'Cannot convert value "@{Serial=...}" to type SwitchParameter'
+PowerShell variable names are not case sensitive, so a local `$usb` overwrote the `-Usb` switch in `tools\quest-wireless.ps1`.
+Fixed 2026-10-18 by renaming the locals (`$usbDev`, `$wifiDev`, `$headsetIp`). If it recurs, `git pull` and run
+`powershell -ExecutionPolicy Bypass -File tools\quest-wireless.ps1 -Apk Builds\RingFighter.apk -Usb -Launch`
+(the APK is already built, so no rebuild is needed).

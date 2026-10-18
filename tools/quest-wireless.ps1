@@ -67,41 +67,41 @@ if ($unauthorized) {
     exit 1
 }
 
-$usb = $devices | Where-Object { $_.State -eq 'device' -and $_.Serial -notmatch ':' } | Select-Object -First 1
-$wifi = $devices | Where-Object { $_.State -eq 'device' -and $_.Serial -match ':' } | Select-Object -First 1
+$usbDev = $devices | Where-Object { $_.State -eq 'device' -and $_.Serial -notmatch ':' } | Select-Object -First 1
+$wifiDev = $devices | Where-Object { $_.State -eq 'device' -and $_.Serial -match ':' } | Select-Object -First 1
 $target = $null
 
 # The headset stays in wireless mode until it restarts, but each computer has to connect to it itself.
 # With no cable attached, try the address given with -Ip, or the one remembered from the last run.
 $ipFile = Join-Path $env:LOCALAPPDATA 'RingFighter\quest-ip.txt'
-if (-not $usb -and -not $wifi) {
+if (-not $usbDev -and -not $wifiDev) {
     if (-not $Ip -and (Test-Path $ipFile)) { $Ip = (Get-Content $ipFile -Raw).Trim() }
     if ($Ip) {
         Write-Host "No cable found. Trying to reconnect to ${Ip}:$Port ..."
         $out = & $adb connect "${Ip}:$Port"
         Write-Host $out
         $devices = Get-Devices $adb
-        $wifi = $devices | Where-Object { $_.State -eq 'device' -and $_.Serial -match ':' } | Select-Object -First 1
+        $wifiDev = $devices | Where-Object { $_.State -eq 'device' -and $_.Serial -match ':' } | Select-Object -First 1
     }
 }
 
-if ($usb -and $Usb) {
-    $target = $usb.Serial
+if ($usbDev -and $Usb) {
+    $target = $usbDev.Serial
     Write-Host "Quest found over USB ($target). Using the cable." -ForegroundColor Green
 }
-elseif ($usb) {
-    Write-Host "Quest found over USB ($($usb.Serial))."
-    $ipOut = (& $adb -s $usb.Serial shell ip -f inet addr show wlan0) -join "`n"
+elseif ($usbDev) {
+    Write-Host "Quest found over USB ($($usbDev.Serial))."
+    $ipOut = (& $adb -s $usbDev.Serial shell ip -f inet addr show wlan0) -join "`n"
     if ($ipOut -match 'inet (\d+\.\d+\.\d+\.\d+)/') {
-        $ip = $Matches[1]
+        $headsetIp = $Matches[1]
     } else {
         Write-Host 'Could not read the headset Wi-Fi address. Is the headset connected to Wi-Fi?' -ForegroundColor Red
         exit 1
     }
-    Write-Host "Headset Wi-Fi address: $ip"
-    & $adb -s $usb.Serial tcpip $Port | Out-Null
+    Write-Host "Headset Wi-Fi address: $headsetIp"
+    & $adb -s $usbDev.Serial tcpip $Port | Out-Null
     Start-Sleep -Seconds 2
-    $target = "${ip}:$Port"
+    $target = "${headsetIp}:$Port"
     $out = & $adb connect $target
     Write-Host $out
     if ($out -notmatch 'connected') {
@@ -109,11 +109,11 @@ elseif ($usb) {
         exit 1
     }
     New-Item -ItemType Directory -Force -Path (Split-Path $ipFile) | Out-Null
-    Set-Content -Path $ipFile -Value $ip
+    Set-Content -Path $ipFile -Value $headsetIp
     Write-Host 'Wireless ADB is ready. You can unplug the cable now.' -ForegroundColor Green
 }
-elseif ($wifi) {
-    $target = $wifi.Serial
+elseif ($wifiDev) {
+    $target = $wifiDev.Serial
     Write-Host "Already connected wirelessly ($target)." -ForegroundColor Green
 }
 else {

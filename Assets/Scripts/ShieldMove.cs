@@ -20,8 +20,8 @@ namespace RingFighter
         [Tooltip("Energy per second while both arms block.")]
         public float doubleDrainPerSecond = 12f;
         [Header("Enemy bolts")]
-        [Tooltip("Ring energy a single shield spends to absorb one enemy bolt. If you can't pay, the shield breaks and the bolt hits you. A double shield reflects bolts for free.")]
-        public float absorbCost = 4f;
+        [Tooltip("Ring energy a single shield GIVES BACK when it absorbs an enemy bolt (a reward for blocking). A double shield reflects bolts instead.")]
+        public float absorbRefund = 2f;
         [Header("Pose rules")]
         [Tooltip("How far in front of the hand the barrier sits (meters).")]
         public float distanceFromHand = 0.18f;
@@ -77,16 +77,11 @@ namespace RingFighter
             return true;
         }
 
-        /// <summary>A single shield takes an enemy bolt: costs ring energy. Returns false (and the shield breaks) if you can't pay.</summary>
+        /// <summary>A single shield takes an enemy bolt and gives a little ring energy back.</summary>
         public bool AbsorbHit()
         {
             if (!IsBlocking) return false;
-            if (!ctx.energy.TrySpend(absorbCost))
-            {
-                MoveLog.Add("Shield broke: no energy to absorb");
-                Cancel();
-                return false;
-            }
+            ctx.energy.Add(absorbRefund);
             PulseHands(0.6f, 0.12f);
             return true;
         }

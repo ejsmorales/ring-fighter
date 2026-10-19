@@ -44,6 +44,7 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 | `EnergyBarVisual.cs` | The old floating energy bar over a hand. Not used by the scene any more (the HUD replaced it). |
 | `PlayerHealth.cs` | Player health, head and torso hit spheres, hit flash, knock-out and fight restart. `PlayerHealth.Instance`. |
 | `EnemyBolt.cs` | The dummy's yellow bolt: hits the player, is absorbed by a single shield (`ShieldMove.AbsorbHit`) or reflected by a double shield (`ShieldMove.Intercept` is the plane-crossing test). |
+| `PauseControl.cs` | Left menu button toggles pause (`Time.timeScale` 0, floating "PAUSED" sign). `PauseControl.IsPaused` stops ring moves in `RingController`. |
 | `PlayerHud.cs` | Builds the curved health/energy bars as meshes, soft-follows the head, draws the red flash and death fade. |
 | `HitShapes.cs` | Physics-free hit detection: targets register an upright capsule; `Segment` (shots, laser) and `Overlap` (whirlwind) test against them. Used alongside physics so hits work even if colliders are missing. |
 | `Impact.cs` | Hit feedback made in code: expanding burst, floating damage number, generated thump sound. Called by `TrainingDummy.TakeDamage`. |

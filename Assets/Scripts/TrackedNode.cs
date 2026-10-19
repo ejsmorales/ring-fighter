@@ -29,6 +29,8 @@ namespace RingFighter
         public float Grip { get; private set; }
         public bool PrimaryButton { get; private set; }
         public bool SecondaryButton { get; private set; }
+        /// <summary>The menu (three-line) button. Only the left Quest controller has one for apps.</summary>
+        public bool MenuButton { get; private set; }
         public bool TriggerHeld { get { return Trigger >= triggerThreshold; } }
         public bool IsHand { get { return node != NodeType.Head; } }
         public int HandMask { get { return node == NodeType.LeftHand ? 1 : (node == NodeType.RightHand ? 2 : 0); } }
@@ -160,6 +162,7 @@ namespace RingFighter
                 bool b;
                 PrimaryButton = source.TryGetFeatureValue(CommonUsages.primaryButton, out b) && b;
                 SecondaryButton = source.TryGetFeatureValue(CommonUsages.secondaryButton, out b) && b;
+                MenuButton = source.TryGetFeatureValue(CommonUsages.menuButton, out b) && b;
             }
         }
 

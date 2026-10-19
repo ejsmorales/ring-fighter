@@ -125,6 +125,9 @@ namespace RingFighter.EditorTools
             playerHealth.controller = controller;
             playerHealth.shield = shield;
 
+            PauseControl pause = ringGo.AddComponent<PauseControl>();
+            pause.rig = rig;
+
             GameObject hudGo = new GameObject("Player HUD");
             PlayerHud hud = hudGo.AddComponent<PlayerHud>();
             hud.head = camGo.transform;
@@ -137,7 +140,7 @@ namespace RingFighter.EditorTools
 
             // ---- Training dummy ----
             GameObject dummyGo = new GameObject("Training Dummy");
-            dummyGo.transform.position = new Vector3(0f, 0f, 4f);
+            dummyGo.transform.position = new Vector3(0f, 0f, 5.5f);
             TrainingDummy dummy = dummyGo.AddComponent<TrainingDummy>();
             dummy.bodyMaterial = dummyMat;
             dummy.healthBarMaterial = healthFill;

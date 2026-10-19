@@ -26,6 +26,12 @@ namespace RingFighter
             Current = max;
         }
 
+        /// <summary>Give some energy back (up to the max). Doesn't pause the recharge.</summary>
+        public void Add(float amount)
+        {
+            Current = Mathf.Min(max, Current + amount);
+        }
+
         public bool CanAfford(float cost)
         {
             return Current >= cost;

@@ -20,13 +20,13 @@ namespace RingFighter
         public float attackInterval = 3f;
         [Tooltip("Seconds of yellow glow before each shot. Lean or raise your shield in this time.")]
         public float chargeTime = 0.8f;
-        public float boltSpeed = 9f;
+        public float boltSpeed = 7f;
         public float boltDamage = 10f;
         [Tooltip("Glowing yellow material for the charge-up orb and the bolt.")]
         public Material attackMaterial;
 
         [Header("Movement")]
-        public Vector3 wanderExtents = new Vector3(2.2f, 0f, 1.2f);
+        public Vector3 wanderExtents = new Vector3(2.2f, 0f, 0.8f);
         public float wanderSpeed = 0.55f;
         public Transform lookTarget;   // usually the player's head
 

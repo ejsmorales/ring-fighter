@@ -27,7 +27,9 @@ namespace RingFighter
         [Tooltip("How far in front of the eyes the bars sit (meters).")]
         public float distance = 1.2f;
         [Tooltip("How far left/right of straight ahead (meters at that distance) the bars' outer edge sits.")]
-        public float sideOffset = 0.55f;
+        public float sideOffset = 0.78f;
+        [Tooltip("Shifts both bars up (+) or down (-) in meters at that distance. Negative pushes them toward the lower corners.")]
+        public float verticalOffset = -0.12f;
         [Tooltip("Radius of the curve (meters). Smaller = more curved.")]
         public float arcRadius = 0.9f;
         [Tooltip("Half of the bar's sweep, in degrees. Bigger = taller bar.")]
@@ -101,7 +103,7 @@ namespace RingFighter
                 float u = fraction * i / (count - 1);
                 float theta = -half + 2f * half * u;
                 float c = Mathf.Cos(theta), s = Mathf.Sin(theta);
-                Vector3 pos = new Vector3(centerX + side * arcRadius * c, arcRadius * s, 0f);
+                Vector3 pos = new Vector3(centerX + side * arcRadius * c, arcRadius * s + verticalOffset, 0f);
                 Vector3 toRight = left ? new Vector3(c, -s, 0f) : new Vector3(c, s, 0f);
                 verts.Add(pos - toRight * (width * 0.5f));   // left edge
                 verts.Add(pos + toRight * (width * 0.5f));   // right edge
@@ -188,7 +190,7 @@ namespace RingFighter
             }
             else
             {
-                float k = 1f - Mathf.Exp(-followSpeed * Time.deltaTime);
+                float k = 1f - Mathf.Exp(-followSpeed * Time.unscaledDeltaTime);
                 transform.rotation = Quaternion.Slerp(transform.rotation, target, k);
             }
 

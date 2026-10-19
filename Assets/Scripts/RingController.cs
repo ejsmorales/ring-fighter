@@ -125,6 +125,7 @@ namespace RingFighter
         private void Update()
         {
             if (ctx == null) return;
+            if (PauseControl.IsPaused) return;   // game paused: no moves
             if (ctx.RingHand == null)
             {
                 UpdatePicker();

@@ -133,8 +133,17 @@ Record each headset session here: date, build, what worked, what didn't.
     after a 0.8 s yellow charge-up glow (steady rhythm now; speeding up as it's hurt and random gaps are for
     later difficulty). The bolt flies 9 m/s at where your chest was when fired, 10 damage, so a lean or duck dodges
     it. Player has 100 HP; at 0 the screen fades red and the fight auto-restarts after 3 s (health, energy, dummy).
-    **Shield:** single shield absorbs the bolt for 4 ring energy (if you can't pay, the shield breaks and it hits
+    **Shield:** single shield absorbs the bolt for 4 ring energy (SUPERSEDED the same evening: now gives back 2; if you couldn't pay, the shield broke and it hit
     you); double shield reflects it at 2x speed for 25 damage, free. **HUD:** soft-follow curved bars, health
     vertical on the left, ring energy vertical on the right (the floating bar above the off hand is gone);
     red edge flash and haptic buzz in both hands when hit. All numbers are public fields to tweak.
   - Built and syntax-checked in the cloud container only; **untested** until built and run on the headset.
+
+- **2026-10-19 (evening) — first fight vs the fighting-back dummy.** Relatively challenging; dodging was tough because
+  the dummy was close. HUD bars fine but too near the center. Requests and changes (untested):
+  - **Dodging:** dummy placed 5.5 m away (was 4) with less depth wander (0.8, was 1.2), bolt speed 9 to 7 m/s.
+    Reaction time from glow to impact is now about 1.6 s.
+  - **HUD:** bars pushed outward (`sideOffset` 0.55 to 0.78) and 12 cm lower, toward the lower corners.
+  - **Pause:** left controller menu button toggles pause (time stops, sign in front of you).
+  - **Blocking rewards you:** a single shield absorbing a bolt now *restores* 2 ring energy (half of the old 4 cost).
+    The "shield breaks when you can't pay" rule is gone. Double shield still reflects the bolt.

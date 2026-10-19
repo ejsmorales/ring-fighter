@@ -5,7 +5,7 @@ namespace RingFighter
 {
     /// <summary>
     /// The dummy's yellow bolt. Flies straight at where your chest was when it was fired (so a lean or duck dodges it).
-    /// A single shield absorbs it for a little ring energy; a double shield reflects it back, faster and harder.
+    /// A single shield absorbs it and gives a little ring energy back; a double shield reflects it back, faster and harder.
     /// </summary>
     public class EnemyBolt : MonoBehaviour
     {
@@ -111,11 +111,10 @@ namespace RingFighter
                     if (shield.AbsorbHit())
                     {
                         Impact.Spark(sp, new Color(0.7f, 1f, 0.4f), 0.3f);
-                        MoveLog.Add("Shield absorbed bolt (-" + Mathf.RoundToInt(shield.absorbCost) + " energy)");
+                        MoveLog.Add("Shield absorbed bolt (+" + Mathf.RoundToInt(shield.absorbRefund) + " energy)");
                         Destroy(gameObject);
                         return;
                     }
-                    // Not enough energy: the shield just broke, so the bolt carries on to hit you.
                 }
 
                 Vector3 hit;

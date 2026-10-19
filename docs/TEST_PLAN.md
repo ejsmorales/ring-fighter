@@ -8,22 +8,29 @@ Before testing: press **Y** (left controller) to show the debug panel. Its "Rece
 something didn't. The top lines show the ring hand, focus distance and the physics self-test.
 (Everything in this build is untested: built in the cloud, not yet run on the headset.)
 
-## This build — enemy attacks, player health, HUD (2026-10-19)
+## This build — tuning from the first fight + pause (2026-10-19, second build)
+
+Changes since the last build: dummy starts 5.5 m away (was 4) and wanders less in depth; its bolt is slower
+(7 m/s, was 9); blocking with a single shield now **gives back** 2 ring energy instead of costing 4; HUD bars moved
+out toward the lower corners; **pause** with the left menu button. All untested (built in the cloud only).
 
 | # | Do this | Expected | Panel shows |
 | --- | --- | --- | --- |
-| T1 | Launch, pick the ring hand, then look around | Curved **red** bar on the left, curved **green** bar on the right, like parentheses at the edges of your view. They trail slightly behind fast head turns and settle | — |
-| T2 | Spend energy (fire bolts, shield) | Right (green) bar drops, refills after a pause. Nothing floats above your off hand any more | `Energy` |
-| T3 | Stand still and watch the dummy | Before the pick: it doesn't attack. After the pick: ~2 s later it glows **yellow** and the orb grows for 0.8 s, then a yellow ball flies at your chest. Repeats about every 3 s | `Dummy fires` |
-| T4 | Let a bolt hit you | Red flash around the screen edge, both controllers buzz, left bar drops by 10% | `YOU WERE HIT for 10 (health 90)` |
-| T5 | After the glow, lean sideways (or duck) about 40 cm | Bolt passes by, no damage | no `YOU WERE HIT` |
-| T6 | Raise ONE forearm into a block with trigger held (shield up) and take a bolt | Bolt bursts on the shield, arm buzzes, no health lost, a little energy lost (4) | `Shield absorbed bolt (-4 energy)` |
-| T7 | Drain energy to near zero, then take a bolt on a single shield | Shield breaks and the bolt hurts you | `Shield broke: no energy to absorb`, then `YOU WERE HIT` |
-| T8 | Raise BOTH arms (double shield) and take a bolt | Bolt flips green, flies back faster, hits the dummy for big damage, both arms buzz, no energy lost | `Bolt REFLECTED (25 dmg)`, `Reflected bolt HIT for 25`, `HIT` number on dummy |
-| T9 | Take hits until health is 0 | Screen fades dark red, "KNOCKED OUT" shows, nothing you do fires. After ~3 s everything resets: health and energy full, dummy full health | `You were knocked out. Restarting...`, `Fight restarted` |
-| T10 | Hit the dummy | It now needs about twice as many hits to die (200 HP) | health bar over its head |
-| T11 | Focus stance: rest the off hand on the ring hand naturally, tap and hold | Laser now starts at the new 0.23 m limit. Tell Claude whether you still fail it | `focus: YES (0.2x m)` |
-| T12 | Keep playing a minute | Is the bolt easy to read and dodge? Is 10 damage / 3 s too easy or too hard? Is the HUD comfortable (no eye strain, not in the way)? | — (report feel) |
+| T1 | Start the game and pick the ring hand. Look straight ahead | Health bar (red) and energy bar (green) are out near the lower left and right edges of your view, not near the center. Tell Claude if still too close, too far, or too low | — |
+| T2 | Watch the dummy for a few shots | It is farther away. From the start of the yellow glow to the bolt reaching you is roughly 1.6 s. Is that enough to lean or duck? Too easy now? | `Dummy fires` |
+| T3 | Lean or duck sideways after the glow starts | Bolt misses | no `YOU WERE HIT` |
+| T4 | Raise ONE forearm into a block, trigger held, take a bolt | Bolt bursts on the shield, arm buzzes, no health lost, the green bar goes **up** a little (+2) | `Shield absorbed bolt (+2 energy)` |
+| T5 | Raise BOTH arms (double shield), take a bolt | Bolt flips green, flies back faster, damages the dummy for 25, no energy change | `Bolt REFLECTED (25 dmg)` |
+| T6 | Press the **menu button** (three lines) on the LEFT controller | Everything freezes (dummy, bolts), a "PAUSED" sign floats in front of you, ring moves do nothing, the HUD still follows your head | `PAUSED` |
+| T7 | Press the left menu button again | Game resumes where it was, sign disappears. Nothing was reset | `Resumed` |
+| T8 | Pause in the middle of a bolt flying at you, then resume | Bolt continues from the same spot | — |
+| T9 | Take hits until health is 0 | Fade to red, "KNOCKED OUT", auto-restart after ~3 s, health/energy/dummy reset | `Fight restarted` |
+| T10 | Press menu while knocked out or while holding the shield | No crash or stuck state; resume works | — |
+| T11 | Focus stance at the new 0.23 m limit | Still easy enough to get the laser? | `focus: YES (0.2x m)` |
+| T12 | Overall: is the fight fair now at 10 damage / 3 s / 100 HP? | Report feel | — |
+
+If the menu button does nothing (T6), tell Claude: some Quest setups route it differently and another pause
+gesture is needed.
 
 ## Regression (every build)
 
@@ -39,3 +46,4 @@ something didn't. The top lines show the ring hand, focus distance and the physi
 | R8 | Ring hand alone | Every trigger pull fires one bolt; off hand never fires |
 | R9 | Focus stance | Tap = bolt, hold = laser (see T11) |
 | R10 | Shield, double shield, whirlwind, charged blast | All still work as before |
+| R11 | Enemy bolt, player damage, knock-out and restart | Same as the last build (see git history of this file) |

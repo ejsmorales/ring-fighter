@@ -51,6 +51,11 @@ namespace RingFighter.EditorTools
             Material healthBack = GetMaterial("RF_HealthBack", new Color(0.08f, 0.08f, 0.1f), true, false);
             Material energyFill = GetMaterial("RF_EnergyFill", new Color(0.2f, 1f, 0.5f), true, false);
             Material energyBack = GetMaterial("RF_EnergyBack", new Color(0.08f, 0.1f, 0.1f), true, false);
+            Material enemyBoltMat = GetMaterial("RF_EnemyBolt", new Color(1f, 0.85f, 0.15f), true, false);
+            Material hudHealth = GetMaterial("RF_HudHealth", new Color(0.95f, 0.25f, 0.25f), true, false);
+            Material hudEnergy = GetMaterial("RF_HudEnergy", new Color(0.2f, 1f, 0.5f), true, false);
+            Material hudBack = GetMaterial("RF_HudBack", new Color(0.05f, 0.07f, 0.07f), true, false);
+            Material hudFlash = GetMaterial("RF_HudFlash", new Color(1f, 1f, 1f, 1f), true, true);
             AssetDatabase.SaveAssets();
 
             // ---- New scene ----
@@ -112,14 +117,23 @@ namespace RingFighter.EditorTools
             shield.shieldMaterial = shieldMat;
             shield.priority = 10;
 
-            // Energy bar that hovers above the left hand.
-            GameObject barGo = new GameObject("Energy Bar");
-            EnergyBarVisual bar = barGo.AddComponent<EnergyBarVisual>();
-            bar.energy = energy;
-            bar.follow = left.transform;
-            bar.lookAt = camGo.transform;
-            bar.fillMaterial = energyFill;
-            bar.backMaterial = energyBack;
+            // Player health, and the HUD that shows health (left) and ring energy (right).
+            // (The old floating energy bar above the off hand is gone; EnergyBarVisual is still in the project.)
+            PlayerHealth playerHealth = ringGo.AddComponent<PlayerHealth>();
+            playerHealth.rig = rig;
+            playerHealth.energy = energy;
+            playerHealth.controller = controller;
+            playerHealth.shield = shield;
+
+            GameObject hudGo = new GameObject("Player HUD");
+            PlayerHud hud = hudGo.AddComponent<PlayerHud>();
+            hud.head = camGo.transform;
+            hud.health = playerHealth;
+            hud.energy = energy;
+            hud.healthMaterial = hudHealth;
+            hud.energyMaterial = hudEnergy;
+            hud.backMaterial = hudBack;
+            hud.flashMaterial = hudFlash;
 
             // ---- Training dummy ----
             GameObject dummyGo = new GameObject("Training Dummy");
@@ -129,6 +143,8 @@ namespace RingFighter.EditorTools
             dummy.healthBarMaterial = healthFill;
             dummy.healthBarBackMaterial = healthBack;
             dummy.lookTarget = camGo.transform;
+            dummy.maxHealth = 200f;
+            dummy.attackMaterial = enemyBoltMat;
             // Saved into the scene (not only added at runtime) so the build can't strip them out.
             Rigidbody dummyBody = dummyGo.AddComponent<Rigidbody>();
             dummyBody.isKinematic = true;

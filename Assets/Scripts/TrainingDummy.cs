@@ -5,14 +5,25 @@ namespace RingFighter
     /// <summary>
     /// A practice opponent: drifts around the arena, flinches and gets knocked back when hit,
     /// shows a health bar, falls over when its health runs out, then comes back after a few seconds.
-    /// It doesn't attack yet. Later, replace the shapes with a real character model: assign
+    /// It fights back: a yellow charge-up glow, then one bolt at your chest every few seconds. Later, replace the shapes with a real character model: assign
     /// 'visualsRoot' with your own model and the placeholder shapes are skipped.
     /// </summary>
     public class TrainingDummy : MonoBehaviour, IDamageable
     {
         [Header("Stats")]
-        public float maxHealth = 100f;
+        public float maxHealth = 200f;
         public float respawnDelay = 3.5f;
+
+        [Header("Attack")]
+        public bool attacks = true;
+        [Tooltip("Seconds from one shot to the next.")]
+        public float attackInterval = 3f;
+        [Tooltip("Seconds of yellow glow before each shot. Lean or raise your shield in this time.")]
+        public float chargeTime = 0.8f;
+        public float boltSpeed = 9f;
+        public float boltDamage = 10f;
+        [Tooltip("Glowing yellow material for the charge-up orb and the bolt.")]
+        public Material attackMaterial;
 
         [Header("Movement")]
         public Vector3 wanderExtents = new Vector3(2.2f, 0f, 1.2f);
@@ -46,6 +57,9 @@ namespace RingFighter
         private Transform visuals;
         private Transform aimPoint;
         private float pendingDamage;
+        private float nextFireTime;
+        private bool wasFighting;
+        private Transform orb;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -78,6 +92,7 @@ namespace RingFighter
 
         private void OnDestroy()
         {
+            if (orb != null) Destroy(orb.gameObject);
             if (aimPoint != null) AimAssist.Unregister(aimPoint);
             HitShapes.Unregister(this);
         }
@@ -139,6 +154,19 @@ namespace RingFighter
             barFill = fill.transform;
         }
 
+        /// <summary>Chest-height point on the dummy (where reflected bolts fly).</summary>
+        public Vector3 ChestPoint
+        {
+            get { return aimPoint != null ? aimPoint.position : transform.position + Vector3.up * 1.25f; }
+        }
+
+        /// <summary>Back to full health and a fresh attack timer (the fight restarts after the player is knocked out).</summary>
+        public void ResetFight()
+        {
+            Revive();
+            wasFighting = false;
+        }
+
         private void Revive()
         {
             IsAlive = true;
@@ -150,6 +178,7 @@ namespace RingFighter
                 visuals.localPosition = Vector3.zero;
             }
             SetCollidersEnabled(true);
+            HideOrb();
             if (bar != null) bar.gameObject.SetActive(true);
             UpdateBar();
         }
@@ -183,6 +212,7 @@ namespace RingFighter
         {
             IsAlive = false;
             deathTime = Time.time;
+            HideOrb();
             SetCollidersEnabled(false);
             if (bar != null) bar.gameObject.SetActive(false);
         }
@@ -196,7 +226,10 @@ namespace RingFighter
         private void Update()
         {
             if (IsAlive)
+            {
                 UpdateAlive();
+                UpdateAttack();
+            }
             else
                 UpdateDead();
 
@@ -218,6 +251,77 @@ namespace RingFighter
                 if (toPlayer.sqrMagnitude > 0.01f)
                     transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(toPlayer), 6f * Time.deltaTime);
             }
+        }
+
+        // ---- Attacking: glow, then fire at the player's chest ----
+
+        private void UpdateAttack()
+        {
+            PlayerHealth player = PlayerHealth.Instance;
+            bool fighting = attacks && player != null && player.IsAlive && player.FightStarted;
+            if (!fighting)
+            {
+                wasFighting = false;
+                HideOrb();
+                return;
+            }
+
+            if (!wasFighting)
+            {
+                wasFighting = true;
+                nextFireTime = Time.time + Mathf.Max(attackInterval, chargeTime + 0.5f) * 0.7f;
+            }
+
+            Vector3 muzzle = transform.position + Vector3.up * 1.4f + transform.forward * 0.45f;
+            float untilFire = nextFireTime - Time.time;
+            if (untilFire <= 0f)
+            {
+                HideOrb();
+                Vector3 dir = player.ChestPoint - muzzle;
+                if (dir.sqrMagnitude < 0.01f) dir = transform.forward;
+                EnemyBolt.Spawn(GetAttackMaterial(), muzzle, dir.normalized, boltSpeed, boltDamage, this);
+                MoveLog.Add("Dummy fires");
+                nextFireTime = Time.time + attackInterval;
+            }
+            else if (untilFire <= chargeTime)
+            {
+                float t = 1f - untilFire / Mathf.Max(0.01f, chargeTime);
+                ShowOrb(muzzle, t);
+            }
+            else
+            {
+                HideOrb();
+            }
+        }
+
+        private Material GetAttackMaterial()
+        {
+            if (attackMaterial == null)
+            {
+                Shader sh = Shader.Find("Universal Render Pipeline/Unlit");
+                if (sh == null) sh = Shader.Find("Sprites/Default");
+                attackMaterial = new Material(sh);
+                attackMaterial.color = EnemyBolt.Yellow;
+            }
+            return attackMaterial;
+        }
+
+        private void ShowOrb(Vector3 position, float t)
+        {
+            if (orb == null)
+            {
+                orb = Fx.Shape(PrimitiveType.Sphere, GetAttackMaterial(), Vector3.one * 0.05f).transform;
+                orb.name = "Charge Orb";
+            }
+            orb.gameObject.SetActive(true);
+            orb.position = position;
+            float pulse = 1f + 0.12f * Mathf.Sin(Time.time * 40f);
+            orb.localScale = Vector3.one * Mathf.Lerp(0.05f, 0.3f, t) * pulse;
+        }
+
+        private void HideOrb()
+        {
+            if (orb != null) orb.gameObject.SetActive(false);
         }
 
         private void UpdateDead()

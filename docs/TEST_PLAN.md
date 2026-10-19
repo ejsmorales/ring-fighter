@@ -2,32 +2,28 @@
 
 Claude updates this file with every change. **"This build"** lists what is new and must be checked; the
 **regression** list is the quick check that older things still work. Report results by test number, e.g.
-"T3 fail: laser didn't start, panel said 'focus lost (0.24 m)'".
+"T3 fail: shield didn't absorb, panel said 'Shield broke: no energy'".
 
 Before testing: press **Y** (left controller) to show the debug panel. Its "Recent" list says what fired and why
 something didn't. The top lines show the ring hand, focus distance and the physics self-test.
+(Everything in this build is untested: built in the cloud, not yet run on the headset.)
 
-## This build — `9ad8751` ring hand / off hand (2026-10-18)
+## This build — enemy attacks, player health, HUD (2026-10-19)
 
 | # | Do this | Expected | Panel shows |
 | --- | --- | --- | --- |
-| T1 | Launch the game, don't touch anything | Green text in front: "Pull the trigger on the hand that wears the ring". Nothing fires | `Ring hand: not picked yet` |
-| T2 | Pull the RIGHT trigger | Prompt disappears, strong buzz in the right hand. Ring only visible on the right controller. Energy bar moves above the LEFT hand | `Ring hand: RIGHT` |
-| T3 | Ring hand alone: point at the dummy, pull the trigger (tap or hold) | One bolt per pull, instantly. Never a laser | `Bolt fired` |
-| T4 | Off hand: point at the dummy, pull its trigger | Nothing is fired | nothing new (or a shield if arm raised) |
-| T5 | Focus stance: rest the off hand on top of the ring hand, aim, **tap** the trigger | One bolt | `focus: YES (0.xx m)`, `Bolt fired` |
-| T6 | Focus stance, **hold** the trigger | Laser beam after a brief moment, short buzz in the off hand; dummy takes damage while beam is on it | `Laser on (focused)`, `Laser HIT ...` |
-| T7 | While lasering, pull the off hand away | Laser stops | `Laser ended: focus lost` |
-| T8 | Note the `focus` distance when your hands feel "together" naturally | — | Tell Claude the number (focus needs < 0.20 m) |
-| T9 | Raise ONE forearm (either hand) in a block, hold its trigger | Normal-size shield in front of that hand | `Shield L/R up` |
-| T10 | While shielding, raise the OTHER forearm too, hold its trigger | Shield grows into one big disc between the hands, both hands buzz | `Shield DOUBLED (both arms)` |
-| T11 | Lower one arm | Shield shrinks back to normal on the remaining arm | `Shield back to one arm` |
-| T12 | Raise BOTH arms at once into block, both triggers | Big shield straight away | `Shield up (BOTH arms)` |
-| T13 | Ring hand: hold trigger and circle the arm | Whirlwind | `Whirlwind R started` |
-| T14 | Off hand: hold trigger and circle the arm | No whirlwind | — |
-| T15 | Charged blast: both triggers, hands together off to one side, release | Blast still works | `Blast fired NN%` |
-| T16 | Hit the dummy with anything | Damage numbers are now **visible** (they may have been invisible before) | `HIT ...` |
-| T17 | Restart the app, pick the LEFT hand this time, repeat T3 and T6 quickly | Same behavior mirrored | `Ring hand: LEFT` |
+| T1 | Launch, pick the ring hand, then look around | Curved **red** bar on the left, curved **green** bar on the right, like parentheses at the edges of your view. They trail slightly behind fast head turns and settle | — |
+| T2 | Spend energy (fire bolts, shield) | Right (green) bar drops, refills after a pause. Nothing floats above your off hand any more | `Energy` |
+| T3 | Stand still and watch the dummy | Before the pick: it doesn't attack. After the pick: ~2 s later it glows **yellow** and the orb grows for 0.8 s, then a yellow ball flies at your chest. Repeats about every 3 s | `Dummy fires` |
+| T4 | Let a bolt hit you | Red flash around the screen edge, both controllers buzz, left bar drops by 10% | `YOU WERE HIT for 10 (health 90)` |
+| T5 | After the glow, lean sideways (or duck) about 40 cm | Bolt passes by, no damage | no `YOU WERE HIT` |
+| T6 | Raise ONE forearm into a block with trigger held (shield up) and take a bolt | Bolt bursts on the shield, arm buzzes, no health lost, a little energy lost (4) | `Shield absorbed bolt (-4 energy)` |
+| T7 | Drain energy to near zero, then take a bolt on a single shield | Shield breaks and the bolt hurts you | `Shield broke: no energy to absorb`, then `YOU WERE HIT` |
+| T8 | Raise BOTH arms (double shield) and take a bolt | Bolt flips green, flies back faster, hits the dummy for big damage, both arms buzz, no energy lost | `Bolt REFLECTED (25 dmg)`, `Reflected bolt HIT for 25`, `HIT` number on dummy |
+| T9 | Take hits until health is 0 | Screen fades dark red, "KNOCKED OUT" shows, nothing you do fires. After ~3 s everything resets: health and energy full, dummy full health | `You were knocked out. Restarting...`, `Fight restarted` |
+| T10 | Hit the dummy | It now needs about twice as many hits to die (200 HP) | health bar over its head |
+| T11 | Focus stance: rest the off hand on the ring hand naturally, tap and hold | Laser now starts at the new 0.23 m limit. Tell Claude whether you still fail it | `focus: YES (0.2x m)` |
+| T12 | Keep playing a minute | Is the bolt easy to read and dodge? Is 10 damage / 3 s too easy or too hard? Is the HUD comfortable (no eye strain, not in the way)? | — (report feel) |
 
 ## Regression (every build)
 
@@ -36,6 +32,10 @@ something didn't. The top lines show the ring hand, focus distance and the physi
 | R1 | Look around | Full VR, head tracking smooth |
 | R2 | Bolt the dummy until it dies | Health bar drops, flash + knockback, falls over, respawns after ~3.5 s |
 | R3 | Fire anything | Controller buzz on firing |
-| R4 | Spam attacks | Energy bar drains and refills after a short pause; moves stop when empty |
+| R4 | Spam attacks | Energy drains and refills after a short pause; moves stop when empty |
 | R5 | Debug panel | Y toggles it; top line says `physics test OK` (FAILED is OK too, hits use the backup) |
 | R6 | Aim tilt | A / B (with panel showing) changes `Aim tilt`; a relaxed wrist points at the dummy |
+| R7 | Ring hand pick | Prompt at start, pull a trigger to choose, ring only on that hand |
+| R8 | Ring hand alone | Every trigger pull fires one bolt; off hand never fires |
+| R9 | Focus stance | Tap = bolt, hold = laser (see T11) |
+| R10 | Shield, double shield, whirlwind, charged blast | All still work as before |

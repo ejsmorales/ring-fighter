@@ -34,6 +34,13 @@ namespace RingFighter
             if (sound) PlayHit(point, amount);
         }
 
+        /// <summary>Just the burst and sound, no number (shield hits, player hits).</summary>
+        public static void Spark(Vector3 point, Color color, float size = 0.25f, bool sound = true)
+        {
+            SpawnBurst(point, color, size);
+            if (sound) PlayHit(point, 20f);
+        }
+
         private static void SpawnBurst(Vector3 point, Color color, float size)
         {
             GameObject go = Fx.Shape(PrimitiveType.Sphere, GetBurstMaterial(), Vector3.one * 0.05f);

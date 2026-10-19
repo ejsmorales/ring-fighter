@@ -26,6 +26,15 @@ namespace RingFighter
         [Tooltip("Show the floating debug readout (press Y on the left controller to hide/show in game).")]
         public bool showDebugReadout = true;
 
+        private PlayerHealth health;
+
+        /// <summary>Stop everything that is running (shield, laser...). Used when the player is knocked out.</summary>
+        public void CancelAllMoves()
+        {
+            for (int i = activeMoves.Count - 1; i >= 0; i--) activeMoves[i].Cancel();
+            activeMoves.Clear();
+        }
+
         public IReadOnlyList<Move> ActiveMoves { get { return activeMoves; } }
 
         /// <summary>True if a lasting move (shield, whirlwind, blast) is currently using this hand.</summary>
@@ -50,6 +59,7 @@ namespace RingFighter
                 readout.Init(ctx);
             }
 
+            health = FindAnyObjectByType<PlayerHealth>();
             ShowPrompt();
         }
 
@@ -85,13 +95,14 @@ namespace RingFighter
             if (chosen == null) return;
 
             ctx.RingHand = chosen;
+            if (health != null) health.FightStarted = true;
             TrackedNode off = ctx.OffHand;
 
             // Only the ring hand shows the ring.
             SetRingVisible(chosen, true);
             SetRingVisible(off, false);
 
-            // The energy meter floats over the support hand.
+            // The energy meter floats over the support hand, if the scene still has one (the HUD shows it now).
             EnergyBarVisual bar = FindAnyObjectByType<EnergyBarVisual>();
             if (bar != null && off != null) bar.follow = off.transform;
 
@@ -120,6 +131,9 @@ namespace RingFighter
                 // No moves until the ring hand is picked. The laser also ignores the trigger pull used to pick.
                 return;
             }
+
+            // Knocked out: no moves until the fight restarts.
+            if (health != null && !health.IsAlive) return;
 
             for (int i = 0; i < allMoves.Count; i++)
                 allMoves[i].Observe();

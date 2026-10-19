@@ -12,7 +12,7 @@ making motions with your arms creates glowing energy constructs: offensive, defe
 | Topic | Decision | Notes |
 | --- | --- | --- |
 | Platform | Meta Quest 3, standalone (Android APK) | Built with Unity 6 (6000.6.6f1), OpenXR |
-| Opponent | AI-controlled | v1 is a training dummy that moves, reacts, and dies but doesn't attack |
+| Opponent | AI-controlled | v1 is a training dummy that moves, reacts, dies, and (since 2026-10-19) fires a telegraphed yellow bolt back |
 | Player movement | Stationary first | Physically dodge and lean. Add movement (likely teleport/dash) later |
 | Input | Controllers: button + motion | No hand tracking for now |
 | Resource | Ring energy meter | Moves cost energy; recharges after a short pause |
@@ -25,12 +25,12 @@ making motions with your arms creates glowing energy constructs: offensive, defe
 
 **Ring hand and off hand (2026-10-18):** at every launch a prompt asks you to pull the trigger on the hand that
 wears the ring. That hand is the main attacker; the other hand is support (defense and focus) and never shoots.
-Only the ring hand shows the ring; the energy bar floats over the off hand.
+Only the ring hand shows the ring. Health (left) and ring energy (right) are on a curved HUD in your view.
 
 | Move | Type | Input | Cost |
 | --- | --- | --- | --- |
 | Energy bolt | Offense | Ring hand alone: point forward, pull the trigger. Fires instantly | 6 per shot |
-| Focused laser | Offense | **Focus stance:** off hand resting on the ring hand (within 0.2 m). Tap = bolt; hold past ~0.22 s = continuous laser. Stops if you let go, break focus, stop pointing forward or swing hard | 20/sec |
+| Focused laser | Offense | **Focus stance:** off hand resting on the ring hand (within 0.23 m; breaks at 0.35 m). Tap = bolt; hold past ~0.22 s = continuous laser. Stops if you let go, break focus, stop pointing forward or swing hard | 20/sec |
 | Charged blast | Offense | Both triggers held, hands together off to one side; release to fire where you're looking. Longer charge = bigger | Drains while charging |
 | Shield | Defense | Either hand: raise the forearm (controller pointing up or sideways) and hold the trigger. **Both arms = one big shield** (double size, strength 2) | 8/sec, 12/sec doubled |
 | Whirlwind | Offense (area) | Ring hand: hold trigger and circle the arm | Drains while active |
@@ -58,8 +58,8 @@ curves shots that are close to the target (bolt 9°, blast 14°).
 
 1. **Controls feel** (current): make gestures reliable and aiming easy. See "Feel targets" below.
    Tuning is done with the in-headset debug readout (Y on the left controller toggles it).
-2. **Feedback**: sounds, hit flashes, impact effects, clearer energy display.
-3. **Enemy fights back**: the opponent uses ring-style attacks and blocks; player health; shields actually stop shots.
+2. **Feedback**: sounds, hit flashes, impact effects, clearer energy display. (Mostly done: haptics, flash, burst, numbers, HUD.)
+3. **Enemy fights back** (current, first pass built 2026-10-19): the dummy fires a yellow bolt; player health and HUD; shield absorbs, double shield reflects. Next: blocking enemy, more attack types, faster/random rhythm for difficulty.
 4. **Movement**: short dash/teleport to dodge.
 5. **Art pass**: character model for the opponent, arena, ring effects (free asset packs).
 6. **More moves and combos** from the backlog.
@@ -126,3 +126,15 @@ Record each headset session here: date, build, what worked, what didn't.
   - Damage numbers: TextMesh created from code had no font, so numbers may have been invisible. Now given the
     built-in font (also used for the ring-hand prompt).
 
+- **2026-10-19 — ring-hand build passed all of T1-T17.** Haptic attacks "feel really good". Focus stance failed
+  often because the off hand drifted too high on the arm: focus distance raised 0.20 to **0.23 m** (break distance
+  0.32 to 0.35 m).
+  - **Decisions (grill) for "enemy fights back":** the dummy has 200 HP (doubled) and fires one yellow bolt every 3 s
+    after a 0.8 s yellow charge-up glow (steady rhythm now; speeding up as it's hurt and random gaps are for
+    later difficulty). The bolt flies 9 m/s at where your chest was when fired, 10 damage, so a lean or duck dodges
+    it. Player has 100 HP; at 0 the screen fades red and the fight auto-restarts after 3 s (health, energy, dummy).
+    **Shield:** single shield absorbs the bolt for 4 ring energy (if you can't pay, the shield breaks and it hits
+    you); double shield reflects it at 2x speed for 25 damage, free. **HUD:** soft-follow curved bars, health
+    vertical on the left, ring energy vertical on the right (the floating bar above the off hand is gone);
+    red edge flash and haptic buzz in both hands when hit. All numbers are public fields to tweak.
+  - Built and syntax-checked in the cloud container only; **untested** until built and run on the headset.

@@ -19,6 +19,9 @@ namespace RingFighter
         public float doubleShieldRadius = 0.75f;
         [Tooltip("Energy per second while both arms block.")]
         public float doubleDrainPerSecond = 12f;
+        [Header("Enemy bolts")]
+        [Tooltip("Ring energy a single shield spends to absorb one enemy bolt. If you can't pay, the shield breaks and the bolt hits you. A double shield reflects bolts for free.")]
+        public float absorbCost = 4f;
         [Header("Pose rules")]
         [Tooltip("How far in front of the hand the barrier sits (meters).")]
         public float distanceFromHand = 0.18f;
@@ -50,6 +53,49 @@ namespace RingFighter
             Vector3 local = disc.transform.InverseTransformPoint(worldPoint);
             // The disc is a flattened cylinder; local XZ is its face, local Y its thickness.
             return new Vector2(local.x, local.z).magnitude <= 0.5f && Mathf.Abs(local.y) <= 1.5f;
+        }
+
+        /// <summary>
+        /// Did the path from 'from' to 'to' (a bolt of the given radius) cross the shield disc this frame?
+        /// A plane-crossing test, because the disc is paper thin and bolts move fast.
+        /// </summary>
+        public bool Intercept(Vector3 from, Vector3 to, float boltRadius, out Vector3 point)
+        {
+            point = to;
+            if (!IsBlocking) return false;
+            Transform d = disc.transform;
+            Vector3 n = d.up;   // the disc is tipped so its local Y faces forward
+            Vector3 c = d.position;
+            float da = Vector3.Dot(from - c, n);
+            float db = Vector3.Dot(to - c, n);
+            if ((da > 0f && db > 0f) || (da < 0f && db < 0f) || Mathf.Approximately(da, db)) return false;
+            Vector3 p = from + (to - from) * (da / (da - db));
+            Vector3 offset = p - c;
+            offset -= n * Vector3.Dot(offset, n);
+            if (offset.magnitude > d.localScale.x * 0.5f + boltRadius) return false;
+            point = p;
+            return true;
+        }
+
+        /// <summary>A single shield takes an enemy bolt: costs ring energy. Returns false (and the shield breaks) if you can't pay.</summary>
+        public bool AbsorbHit()
+        {
+            if (!IsBlocking) return false;
+            if (!ctx.energy.TrySpend(absorbCost))
+            {
+                MoveLog.Add("Shield broke: no energy to absorb");
+                Cancel();
+                return false;
+            }
+            PulseHands(0.6f, 0.12f);
+            return true;
+        }
+
+        /// <summary>Buzz the arm(s) holding the shield.</summary>
+        public void PulseHands(float amplitude, float duration)
+        {
+            if (hand != null) hand.Haptic(amplitude, duration);
+            if (second != null) second.Haptic(amplitude, duration);
         }
 
         private void Reset()
@@ -121,6 +167,7 @@ namespace RingFighter
 
         public override void Tick()
         {
+            if (!IsActive || hand == null) return;   // cancelled this frame (for example the shield broke)
             string reason;
             bool firstOk = StillBlocking(hand, out reason);
             string secondReason;

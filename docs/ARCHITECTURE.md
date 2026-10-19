@@ -16,8 +16,9 @@ Ring Controller (RingController + RingEnergy + one component per move)
  ├─ WhirlwindMove
  └─ ShieldMove
 
-Training Dummy (TrainingDummy, implements IDamageable)
-Energy Bar (EnergyBarVisual, floats above the left hand)
+Ring Controller also has PlayerHealth (hit spheres follow the headset)
+Player HUD (PlayerHud: curved health bar left, energy bar right, red flash/fade)
+Training Dummy (TrainingDummy, implements IDamageable; charges and fires EnemyBolt)
 ```
 
 Command-line builds: `Assets/Editor/CommandLineBuild.cs` (`BuildQuest`), driven by `tools/build-quest.ps1`.
@@ -40,7 +41,10 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 | `Projectile.cs` | Flying energy ball; sphere-casts each frame so fast shots can't pass through targets. |
 | `IDamageable.cs` | Interface for anything that can be hit. |
 | `TrainingDummy.cs` | Practice target: wanders, flinches, health bar, falls, respawns. |
-| `EnergyBarVisual.cs` | The floating energy bar. |
+| `EnergyBarVisual.cs` | The old floating energy bar over a hand. Not used by the scene any more (the HUD replaced it). |
+| `PlayerHealth.cs` | Player health, head and torso hit spheres, hit flash, knock-out and fight restart. `PlayerHealth.Instance`. |
+| `EnemyBolt.cs` | The dummy's yellow bolt: hits the player, is absorbed by a single shield (`ShieldMove.AbsorbHit`) or reflected by a double shield (`ShieldMove.Intercept` is the plane-crossing test). |
+| `PlayerHud.cs` | Builds the curved health/energy bars as meshes, soft-follows the head, draws the red flash and death fade. |
 | `HitShapes.cs` | Physics-free hit detection: targets register an upright capsule; `Segment` (shots, laser) and `Overlap` (whirlwind) test against them. Used alongside physics so hits work even if colliders are missing. |
 | `Impact.cs` | Hit feedback made in code: expanding burst, floating damage number, generated thump sound. Called by `TrainingDummy.TakeDamage`. |
 | `Fx.cs` | Helper to make collider-less placeholder shapes. |

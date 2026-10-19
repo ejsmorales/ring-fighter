@@ -20,6 +20,12 @@ namespace RingFighter
             Current = max;
         }
 
+        /// <summary>Fill the meter (used when a fight restarts).</summary>
+        public void Refill()
+        {
+            Current = max;
+        }
+
         public bool CanAfford(float cost)
         {
             return Current >= cost;

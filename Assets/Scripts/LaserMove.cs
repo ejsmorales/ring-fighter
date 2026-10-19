@@ -47,9 +47,9 @@ namespace RingFighter
 
         [Header("Focus (off hand on the ring hand)")]
         [Tooltip("Hands closer than this (meters) count as focusing: needed to fire the laser.")]
-        public float focusDistance = 0.2f;
+        public float focusDistance = 0.23f;
         [Tooltip("The laser stops if the hands drift further apart than this (meters).")]
-        public float focusBreakDistance = 0.32f;
+        public float focusBreakDistance = 0.35f;
 
         private bool wasHeld = true;   // ignore a trigger that is already down when the ring hand is picked
         private bool waiting;          // focused pull: deciding between tap (bolt) and hold (laser)

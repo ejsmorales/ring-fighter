@@ -74,9 +74,9 @@ namespace RingFighter
             point = b;
             head = false;
             if (!IsAlive) return false;
-            Vector3 head = HeadPosition;
+            Vector3 headPos = HeadPosition;
             Vector3 c1, c2;
-            float d1 = Dist(head, a, b, out c1);
+            float d1 = Dist(headPos, a, b, out c1);
             float d2 = Dist(ChestPoint, a, b, out c2);
             bool hitHead = d1 <= headRadius + boltRadius;
             bool hitTorso = d2 <= torsoRadius + boltRadius;

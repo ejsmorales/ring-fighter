@@ -91,3 +91,7 @@ PowerShell variable names are not case sensitive, so a local `$usb` overwrote th
 Fixed 2026-10-18 by renaming the locals (`$usbDev`, `$wifiDev`, `$headsetIp`). If it recurs, `git pull` and run
 `powershell -ExecutionPolicy Bypass -File tools\quest-wireless.ps1 -Apk Builds\RingFighter.apk -Usb -Launch`
 (the APK is already built, so no rebuild is needed).
+
+### Build failed: CS0841 / CS0136 'head' in PlayerHealth.cs (2026-10-19)
+A new `out bool head` parameter clashed with an existing local variable of the same name in `SegmentHits`. Fixed by
+renaming the local to `headPos`. (The cloud syntax check can't catch name clashes like this; only Unity's compiler does.)

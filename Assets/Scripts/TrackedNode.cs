@@ -31,6 +31,9 @@ namespace RingFighter
         public bool SecondaryButton { get; private set; }
         /// <summary>The menu (three-line) button. Only the left Quest controller has one for apps.</summary>
         public bool MenuButton { get; private set; }
+        /// <summary>Thumbstick position, x = right, y = forward (each -1 to 1). Hands only.</summary>
+        public Vector2 Thumbstick { get; private set; }
+        public bool ThumbstickClick { get; private set; }
         public bool TriggerHeld { get { return Trigger >= triggerThreshold; } }
         public bool IsHand { get { return node != NodeType.Head; } }
         public int HandMask { get { return node == NodeType.LeftHand ? 1 : (node == NodeType.RightHand ? 2 : 0); } }
@@ -152,7 +155,7 @@ namespace RingFighter
 
             IsTracked = isTracked;
             if (IsTracked)
-                RecordSample(transform.position);
+                RecordSample(transform.localPosition);   // relative to the rig, so moving the player is not a hand swing
 
             if (IsHand)
             {
@@ -163,6 +166,9 @@ namespace RingFighter
                 PrimaryButton = source.TryGetFeatureValue(CommonUsages.primaryButton, out b) && b;
                 SecondaryButton = source.TryGetFeatureValue(CommonUsages.secondaryButton, out b) && b;
                 MenuButton = source.TryGetFeatureValue(CommonUsages.menuButton, out b) && b;
+                Vector2 stick;
+                Thumbstick = source.TryGetFeatureValue(CommonUsages.primary2DAxis, out stick) ? stick : Vector2.zero;
+                ThumbstickClick = source.TryGetFeatureValue(CommonUsages.primary2DAxisClick, out b) && b;
             }
         }
 

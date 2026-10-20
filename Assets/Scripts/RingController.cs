@@ -35,6 +35,9 @@ namespace RingFighter
             activeMoves.Clear();
         }
 
+        /// <summary>The shared player info (ring hand, off hand...). Null before Start.</summary>
+        public RingContext Context { get { return ctx; } }
+
         public IReadOnlyList<Move> ActiveMoves { get { return activeMoves; } }
 
         /// <summary>True if a lasting move (shield, whirlwind, blast) is currently using this hand.</summary>

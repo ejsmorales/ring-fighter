@@ -125,6 +125,11 @@ namespace RingFighter.EditorTools
             playerHealth.controller = controller;
             playerHealth.shield = shield;
 
+            PlayerMovement mover = ringGo.AddComponent<PlayerMovement>();
+            mover.rig = rig;
+            mover.controller = controller;
+            mover.health = playerHealth;
+
             PauseControl pause = ringGo.AddComponent<PauseControl>();
             pause.rig = rig;
 

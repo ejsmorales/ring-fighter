@@ -24,7 +24,7 @@ namespace RingFighter
         [Header("Hit area")]
         [Tooltip("How far below the headset (meters) the torso sphere sits. Enemy bolts aim here.")]
         public float torsoDrop = 0.4f;
-        public float torsoRadius = 0.22f;
+        public float torsoRadius = 0.18f;
         public float headRadius = 0.13f;
 
         public float Health { get; private set; }
@@ -134,6 +134,8 @@ namespace RingFighter
             HitFlash = 0f;
             if (energy != null) energy.Refill();
             EnemyBolt.ClearAll();
+            PlayerMovement mover = FindAnyObjectByType<PlayerMovement>();
+            if (mover != null) mover.ResetPosition();
             TrainingDummy[] dummies = FindObjectsByType<TrainingDummy>(FindObjectsSortMode.None);
             for (int i = 0; i < dummies.Length; i++) dummies[i].ResetFight();
             MoveLog.Add("Fight restarted");

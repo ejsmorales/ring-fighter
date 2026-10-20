@@ -147,3 +147,12 @@ Record each headset session here: date, build, what worked, what didn't.
   - **Pause:** left controller menu button toggles pause (time stops, sign in front of you).
   - **Blocking rewards you:** a single shield absorbing a bolt now *restores* 2 ring energy (half of the old 4 cost).
     The "shield breaks when you can't pay" rule is gone. Double shield still reflects the bolt.
+
+- **2026-10-19 (night) — pause works, enemy attacks.** Dodging with the head alone is hard (one dodge still got hit
+  in the chest, because the torso hit sphere follows the head). **Decision:** add movement on the *off-hand*
+  thumbstick (left ring = right stick, and vice versa), relative to where you look. Start with **quick dash steps**;
+  keep **smooth strafing** as a switchable mode (click the stick to cycle Dash / Smooth / Off); movement is its own
+  component so modes can be swapped or added. Torso hit sphere 0.22 to 0.18 m.
+  - **Open idea: real-movement play with passthrough** (like Thrill of the Fight): real steps already move you (head
+    tracking drives the hit tests); passthrough would show the room instead of the arena. It needs Meta's OpenXR
+    passthrough feature and a manifest change, so it is a separate experiment, not built yet.

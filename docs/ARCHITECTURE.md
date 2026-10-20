@@ -43,7 +43,7 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 | `TrainingDummy.cs` | Practice target: wanders, flinches, health bar, falls, respawns. |
 | `EnergyBarVisual.cs` | The old floating energy bar over a hand. Not used by the scene any more (the HUD replaced it). |
 | `PlayerHealth.cs` | Player health, head and torso hit spheres, hit flash, knock-out and fight restart. `PlayerHealth.Instance`. |
-| `EnemyBolt.cs` | The dummy's yellow bolt: hits the player, is absorbed by a single shield (`ShieldMove.AbsorbHit`) or reflected by a double shield (`ShieldMove.Intercept` is the plane-crossing test). |
+| `EnemyBolt.cs` | The dummy's yellow bolt (also: clashes with your projectiles via `ClashWith`, laser cuts via `CutAlong`): hits the player, is absorbed by a single shield (`ShieldMove.AbsorbHit`) or reflected by a double shield (`ShieldMove.Intercept` is the plane-crossing test). |
 | `PlayerMovement.cs` | Off-hand thumbstick movement: Dash (default), Smooth, Off; click the stick to cycle. Moves the rig (player root), clamped to an arena circle. Independent of the move system. |
 | `PauseControl.cs` | Left menu button toggles pause (`Time.timeScale` 0, floating "PAUSED" sign). `PauseControl.IsPaused` stops ring moves in `RingController`. |
 | `PlayerHud.cs` | Builds the curved health/energy bars as meshes, soft-follows the head, draws the red flash and death fade. |

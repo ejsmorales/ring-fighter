@@ -156,3 +156,16 @@ Record each headset session here: date, build, what worked, what didn't.
   - **Open idea: real-movement play with passthrough** (like Thrill of the Fight): real steps already move you (head
     tracking drives the hit tests); passthrough would show the room instead of the arena. It needs Meta's OpenXR
     passthrough feature and a manifest change, so it is a separate experiment, not built yet.
+
+- **2026-10-19 (late night) — dash + smooth both pass; "smooth is a lot better than the dash".** Both stay in. The
+  stick click switched Dash, Smooth, Off as built; **changed** to just Dash <-> Smooth (Off is an inspector tick).
+  - **Decisions (grill) for the next attack changes:**
+    - *Whirlwind:* hold-to-sustain (circle to start, then rest your arm; it keeps going while the trigger is held,
+      speeds up over ~3 s, drains 14/s, follows your gaze, caps at 14 m). Contact lifts the dummy ~2.2 m and it
+      takes fall damage on landing (capped at 40, deliberately below the vortex's own damage, per the owner's wish
+      that it not out-damage the plain moves). Touching it also slows its shooting by 20% for 6 s.
+    - *Bolt clashes:* equal damage cancels both in a small dark burst; the stronger carries on minus **half** of the
+      weaker one's damage. Applies to your bolts/blasts vs the dummy's bolt. The laser cuts any enemy bolt it crosses.
+      (Whirlwind does not touch bolts for now.)
+    - *Headshots:* 1.5x on direct hits, both ways. The dummy aims at your head about 15% of the time (orange glow
+      warns you).

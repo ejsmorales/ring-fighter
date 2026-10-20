@@ -3,31 +3,37 @@ using UnityEngine;
 namespace RingFighter
 {
     /// <summary>
-    /// Area attack (ring hand): hold the trigger and swing your arm in circles to spin up a whirlwind that
-    /// drifts forward and shreds anything inside it. Keep circling to keep it alive; it drains energy.
+    /// Area attack (ring hand): hold the trigger and swing your arm in circles to spin up a whirlwind. Once it
+    /// starts you can rest your arm: it keeps travelling for as long as the trigger stays held, getting faster
+    /// the longer it runs, and gently follows where you look. It shreds anything inside it, lifts a target into
+    /// the air (it takes fall damage on landing) and slows that target's attacks. Drains energy; release to end it.
     /// </summary>
     public class WhirlwindMove : Move
     {
         public Material whirlwindMaterial;
-        public float drainPerSecond = 20f;
+        public float drainPerSecond = 14f;
         public float minEnergyToStart = 14f;
         public float damagePerSecond = 28f;
         public float radius = 1.4f;
+        [Tooltip("Speed (m/s) when it starts.")]
         public float travelSpeed = 2.2f;
-        public float maxDuration = 6f;
+        [Tooltip("Top speed (m/s) after it has run for 'Ramp Time'.")]
+        public float maxTravelSpeed = 5.5f;
+        public float rampTime = 3f;
+        public float maxDuration = 8f;
+        [Tooltip("It fades out after travelling this far (meters).")]
+        public float maxDistance = 14f;
+        [Tooltip("How fast it turns to follow where you look (degrees per second).")]
+        public float steerDegreesPerSecond = 60f;
         [Tooltip("How far around a circle (degrees) the hand must go to start the whirlwind.")]
         public float startAngle = 320f;
-        [Tooltip("Whirlwind keeps going while the hand has swept at least this many degrees recently.")]
-        public float sustainAngle = 200f;
-        [Tooltip("Seconds the whirlwind survives after circling stops.")]
-        public float gracePeriod = 0.45f;
 
         private TrackedNode hand;
         private GameObject root;
         private Transform[] discs;
         private Vector3 direction;
         private float startTime;
-        private float lastCircleTime;
+        private float travelled;
 
         private readonly Collider[] overlap = new Collider[24];
         private readonly System.Collections.Generic.List<IDamageable> hitThisFrame = new System.Collections.Generic.List<IDamageable>();
@@ -61,7 +67,7 @@ namespace RingFighter
             IsActive = true;
             UsedHands = h.HandMask;
             startTime = Time.time;
-            lastCircleTime = Time.time;
+            travelled = 0f;
             loggedHit = false;
             direction = ctx.rig.FlatForward();
 
@@ -92,14 +98,10 @@ namespace RingFighter
                 return;
             }
 
-            float angle;
-            if (Gestures.IsCircling(hand, 0.85f, sustainAngle, out angle))
-                lastCircleTime = Time.time;
-
             string reason = null;
             if (!hand.TriggerHeld) reason = "trigger released";
-            else if (Time.time - lastCircleTime > gracePeriod) reason = "stopped circling";
             else if (Time.time - startTime > maxDuration) reason = "time up";
+            else if (travelled > maxDistance) reason = "reached max range";
             else if (!ctx.energy.Drain(drainPerSecond)) reason = "out of energy";
             if (reason != null)
             {
@@ -108,7 +110,12 @@ namespace RingFighter
                 return;
             }
 
-            root.transform.position += direction * (travelSpeed * Time.deltaTime);
+            // Gently follow the player's gaze, and speed up the longer it runs.
+            direction = Vector3.RotateTowards(direction, ctx.rig.FlatForward(), steerDegreesPerSecond * Mathf.Deg2Rad * Time.deltaTime, 0f);
+            float ramp = Mathf.Clamp01((Time.time - startTime) / Mathf.Max(0.01f, rampTime));
+            float speed = Mathf.Lerp(travelSpeed, maxTravelSpeed, ramp);
+            root.transform.position += direction * (speed * Time.deltaTime);
+            travelled += speed * Time.deltaTime;
             for (int i = 0; i < discs.Length; i++)
                 discs[i].Rotate(0f, (360f + 220f * i) * Time.deltaTime, 0f, Space.Self);
 
@@ -142,8 +149,9 @@ namespace RingFighter
         {
             Vector3 push = point - center;
             push.y = 0f;
-            push = push.sqrMagnitude > 0.0001f ? push.normalized * 2f : direction;
-            target.TakeDamage(damagePerSecond * Time.deltaTime, point, push);
+            push = push.sqrMagnitude > 0.0001f ? push.normalized * 0.6f : direction * 0.6f;
+            target.TakeDamage(damagePerSecond * Time.deltaTime, point, push, DamageKind.Area);
+            target.OnWhirlwind(Time.deltaTime);
             if (!loggedHit)
             {
                 loggedHit = true;

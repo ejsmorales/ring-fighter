@@ -7,10 +7,10 @@ namespace RingFighter
     /// stick, and vice versa). Independent of the ring moves: it only moves the rig (the player's root), so hit
     /// tests, the HUD and the dummy's aim all follow automatically. Real steps in your room still work on top of it.
     ///
-    /// Modes (click the off-hand stick to cycle; the choice is remembered):
+    /// Modes (click the off-hand stick to switch Dash / Smooth; the choice is remembered):
     ///   Dash   - flick the stick: a quick burst in that direction, then a short cooldown. Best for dodging bolts.
     ///   Smooth - hold the stick to glide. More flexible, but some people get dizzy.
-    ///   Off    - no stick movement (physical dodging only).
+    ///   Off    - no stick movement (physical dodging only). Only reachable if "Include Off In Cycle" is ticked.
     /// Directions are relative to where your head faces.
     /// </summary>
     public class PlayerMovement : MonoBehaviour
@@ -24,6 +24,8 @@ namespace RingFighter
         public PlayerHealth health;
 
         public Mode mode = Mode.Dash;
+        [Tooltip("If ticked, clicking the stick cycles Dash, Smooth, Off. Otherwise it just switches between Dash and Smooth.")]
+        public bool includeOffInCycle = false;
 
         [Header("Dash")]
         [Tooltip("How far one dash goes (meters).")]
@@ -119,7 +121,8 @@ namespace RingFighter
 
         private void CycleMode(TrackedNode hand)
         {
-            mode = (Mode)(((int)mode + 1) % 3);
+            int count = includeOffInCycle ? 3 : 2;
+            mode = (Mode)(((int)mode + 1) % count);
             dashing = false;
             PlayerPrefs.SetInt(ModePrefKey, (int)mode);
             PlayerPrefs.Save();

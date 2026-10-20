@@ -25,6 +25,30 @@ namespace RingFighter
         [Tooltip("Glowing yellow material for the charge-up orb and the bolt.")]
         public Material attackMaterial;
 
+        [Tooltip("Chance (0-1) that a shot is aimed at your head instead of your chest. The glow turns orange when it is.")]
+        public float headShotChance = 0.15f;
+
+        [Header("Headshots (on the dummy)")]
+        [Tooltip("Hits at least this high above the dummy's feet (meters) count as headshots.")]
+        public float headMinHeight = 1.72f;
+        public float headshotMultiplier = 1.5f;
+
+        [Header("Whirlwind: lift, fall, slow")]
+        [Tooltip("Seconds inside the whirlwind before it lifts the dummy.")]
+        public float liftAfter = 0.35f;
+        [Tooltip("How high (meters) the whirlwind lifts it.")]
+        public float liftHeight = 2.2f;
+        [Tooltip("Fall damage when it lands from the full lift height. Shorter falls do proportionally less.")]
+        public float maxFallDamage = 40f;
+        [Tooltip("Seconds after a lift before the whirlwind can lift it again.")]
+        public float liftCooldown = 2.5f;
+        [Tooltip("Gravity used for the fall (m/s squared). Higher = snappier.")]
+        public float fallGravity = 14f;
+        [Tooltip("After the whirlwind touches it, its attacks come this much slower (1.25 = 20% fewer shots)...")]
+        public float slowedIntervalMultiplier = 1.25f;
+        [Tooltip("...for this many seconds after the last touch.")]
+        public float slowDuration = 6f;
+
         [Header("Movement")]
         public Vector3 wanderExtents = new Vector3(2.2f, 0f, 0.8f);
         public float wanderSpeed = 0.55f;
@@ -57,9 +81,24 @@ namespace RingFighter
         private Transform visuals;
         private Transform aimPoint;
         private float pendingDamage;
+        private bool pendingHeadshot;
         private float nextFireTime;
         private bool wasFighting;
         private Transform orb;
+        private Renderer orbRenderer;
+        private MaterialPropertyBlock orbBlock;
+        private bool charging;
+        private bool chargeAimsHead;
+
+        // whirlwind effects
+        private enum Air { Grounded, Rising, Falling }
+        private Air air = Air.Grounded;
+        private float airHeight;
+        private float airVelocity;
+        private float windContact;
+        private float windSeen = -10f;
+        private float liftReadyTime;
+        private float slowedUntil = -1f;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -154,6 +193,55 @@ namespace RingFighter
             barFill = fill.transform;
         }
 
+        /// <summary>The whirlwind is touching the dummy: slows its attacks and, after a moment, lifts it.</summary>
+        public void OnWhirlwind(float deltaTime)
+        {
+            if (!IsAlive) return;
+            slowedUntil = Time.time + slowDuration;
+            windSeen = Time.time;
+            if (air != Air.Grounded || Time.time < liftReadyTime) return;
+            windContact += deltaTime;
+            if (windContact >= liftAfter)
+            {
+                windContact = 0f;
+                air = Air.Rising;
+                airVelocity = 0f;
+                MoveLog.Add("Dummy lifted by whirlwind");
+            }
+        }
+
+        private bool Slowed { get { return Time.time < slowedUntil; } }
+
+        private void UpdateAir()
+        {
+            if (Time.time - windSeen > 0.25f && air == Air.Grounded) windContact = 0f;
+
+            if (air == Air.Rising)
+            {
+                airHeight = Mathf.MoveTowards(airHeight, liftHeight, 9f * Time.deltaTime);
+                if (airHeight >= liftHeight - 0.001f)
+                {
+                    air = Air.Falling;
+                    airVelocity = 0f;
+                }
+            }
+            else if (air == Air.Falling)
+            {
+                airVelocity -= fallGravity * Time.deltaTime;
+                airHeight += airVelocity * Time.deltaTime;
+                if (airHeight <= 0f)
+                {
+                    airHeight = 0f;
+                    air = Air.Grounded;
+                    liftReadyTime = Time.time + liftCooldown;
+                    float fall = maxFallDamage;   // it always falls from the same lift height
+                    Vector3 feet = transform.position;
+                    MoveLog.Add("Dummy landed: fall damage " + Mathf.RoundToInt(fall));
+                    TakeDamage(fall, feet + Vector3.up * 0.3f, Vector3.zero, DamageKind.Fall);
+                }
+            }
+        }
+
         /// <summary>Chest-height point on the dummy (where reflected bolts fly).</summary>
         public Vector3 ChestPoint
         {
@@ -170,6 +258,10 @@ namespace RingFighter
         private void Revive()
         {
             IsAlive = true;
+            air = Air.Grounded;
+            airHeight = 0f;
+            windContact = 0f;
+            slowedUntil = -1f;
             Health = maxHealth;
             knockOffset = Vector3.zero;
             if (visuals != null)
@@ -185,16 +277,30 @@ namespace RingFighter
 
         public void TakeDamage(float amount, Vector3 point, Vector3 force)
         {
+            TakeDamage(amount, point, force, DamageKind.Direct);
+        }
+
+        public void TakeDamage(float amount, Vector3 point, Vector3 force, DamageKind kind)
+        {
             if (!IsAlive) return;
+
+            // Direct hits to the head do extra.
+            bool headshot = kind == DamageKind.Direct && point.y - transform.position.y >= headMinHeight;
+            if (headshot) amount *= headshotMultiplier;
+
             Health = Mathf.Max(0f, Health - amount);
             flashTimer = 0.12f;
 
-            // Continuous damage (whirlwind) arrives in tiny pieces; bundle it so feedback isn't spammed.
+            // Continuous damage (whirlwind, laser) arrives in tiny pieces; bundle it so feedback isn't spammed.
             pendingDamage += amount;
+            if (headshot) pendingHeadshot = true;
             if (amount >= 1f || pendingDamage >= 5f)
             {
-                Impact.Hit(point, pendingDamage, new Color(1f, 0.85f, 0.3f), lookTarget);
+                Color c = pendingHeadshot ? new Color(1f, 0.45f, 0.2f) : (kind == DamageKind.Fall ? new Color(1f, 0.6f, 0.2f) : new Color(1f, 0.85f, 0.3f));
+                Impact.Hit(point, pendingDamage, c, lookTarget, true, pendingHeadshot ? "!" : null);
+                if (pendingHeadshot) MoveLog.Add("HEADSHOT on the dummy");
                 pendingDamage = 0f;
+                pendingHeadshot = false;
             }
             force.y = 0f;
             knockOffset += force * 0.15f;
@@ -212,6 +318,9 @@ namespace RingFighter
         {
             IsAlive = false;
             deathTime = Time.time;
+            transform.position -= Vector3.up * airHeight;   // knocked out mid-air: drop to the floor
+            air = Air.Grounded;
+            airHeight = 0f;
             HideOrb();
             SetCollidersEnabled(false);
             if (bar != null) bar.gameObject.SetActive(false);
@@ -242,7 +351,8 @@ namespace RingFighter
             float t = Time.time * wanderSpeed + wanderPhase;
             Vector3 wander = new Vector3(Mathf.Sin(t) * wanderExtents.x, 0f, Mathf.Sin(t * 0.63f + 1.3f) * wanderExtents.z);
             knockOffset = Vector3.Lerp(knockOffset, Vector3.zero, 3f * Time.deltaTime);
-            transform.position = home + wander + knockOffset;
+            UpdateAir();
+            transform.position = home + wander + knockOffset + Vector3.up * airHeight;
 
             if (lookTarget != null)
             {
@@ -262,6 +372,16 @@ namespace RingFighter
             if (!fighting)
             {
                 wasFighting = false;
+                charging = false;
+                HideOrb();
+                return;
+            }
+
+            // Held in the air by a whirlwind: no shooting, and the timer waits for it to land.
+            if (air != Air.Grounded)
+            {
+                nextFireTime += Time.deltaTime;
+                charging = false;
                 HideOrb();
                 return;
             }
@@ -277,14 +397,22 @@ namespace RingFighter
             if (untilFire <= 0f)
             {
                 HideOrb();
-                Vector3 dir = player.ChestPoint - muzzle;
+                bool atHead = charging && chargeAimsHead;
+                charging = false;
+                Vector3 target = atHead ? player.HeadPoint : player.ChestPoint;
+                Vector3 dir = target - muzzle;
                 if (dir.sqrMagnitude < 0.01f) dir = transform.forward;
-                EnemyBolt.Spawn(GetAttackMaterial(), muzzle, dir.normalized, boltSpeed, boltDamage, this);
-                MoveLog.Add("Dummy fires");
-                nextFireTime = Time.time + attackInterval;
+                EnemyBolt.Spawn(GetAttackMaterial(), muzzle, dir.normalized, boltSpeed, boltDamage, this, atHead);
+                MoveLog.Add(atHead ? "Dummy fires (AT YOUR HEAD)" : "Dummy fires");
+                nextFireTime = Time.time + attackInterval * (Slowed ? slowedIntervalMultiplier : 1f);
             }
             else if (untilFire <= chargeTime)
             {
+                if (!charging)
+                {
+                    charging = true;
+                    chargeAimsHead = Random.value < headShotChance;   // decided when the glow starts, shown by its color
+                }
                 float t = 1f - untilFire / Mathf.Max(0.01f, chargeTime);
                 ShowOrb(muzzle, t);
             }
@@ -312,7 +440,13 @@ namespace RingFighter
             {
                 orb = Fx.Shape(PrimitiveType.Sphere, GetAttackMaterial(), Vector3.one * 0.05f).transform;
                 orb.name = "Charge Orb";
+                orbRenderer = orb.GetComponent<Renderer>();
+                orbBlock = new MaterialPropertyBlock();
             }
+            Color tint = chargeAimsHead ? EnemyBolt.HeadOrange : EnemyBolt.Yellow;
+            orbBlock.SetColor(BaseColorId, tint);
+            orbBlock.SetColor(ColorId, tint);
+            orbRenderer.SetPropertyBlock(orbBlock);
             orb.gameObject.SetActive(true);
             orb.position = position;
             float pulse = 1f + 0.12f * Mathf.Sin(Time.time * 40f);
@@ -344,7 +478,8 @@ namespace RingFighter
             bool flashing = flashTimer > 0f;
             if (flashing) flashTimer -= Time.deltaTime;
 
-            Color c = flashing ? new Color(1f, 0.35f, 0.3f) : (IsAlive ? new Color(0.78f, 0.78f, 0.82f) : new Color(0.35f, 0.35f, 0.4f));
+            Color alive = Slowed ? new Color(0.6f, 0.78f, 1f) : new Color(0.78f, 0.78f, 0.82f);   // bluish while its attacks are slowed
+            Color c = flashing ? new Color(1f, 0.35f, 0.3f) : (IsAlive ? alive : new Color(0.35f, 0.35f, 0.4f));
             block.SetColor(BaseColorId, c);
             block.SetColor(ColorId, c);
             for (int i = 0; i < renderers.Length; i++)

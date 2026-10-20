@@ -26,11 +26,11 @@ namespace RingFighter
         private static readonly int ColorId = Shader.PropertyToID("_Color");
 
         /// <summary>Spawns the burst, the damage number and the sound at 'point'.</summary>
-        public static void Hit(Vector3 point, float amount, Color color, Transform viewer, bool sound = true)
+        public static void Hit(Vector3 point, float amount, Color color, Transform viewer, bool sound = true, string suffix = null)
         {
             float size = Mathf.Clamp(0.15f + amount * 0.012f, 0.15f, 0.7f);
             SpawnBurst(point, color, size);
-            SpawnNumber(point + Vector3.up * 0.25f, amount, color, viewer);
+            SpawnNumber(point + Vector3.up * 0.25f, amount, color, viewer, suffix);
             if (sound) PlayHit(point, amount);
         }
 
@@ -55,12 +55,12 @@ namespace RingFighter
             i.block = new MaterialPropertyBlock();
         }
 
-        private static void SpawnNumber(Vector3 point, float amount, Color color, Transform viewer)
+        private static void SpawnNumber(Vector3 point, float amount, Color color, Transform viewer, string suffix)
         {
             GameObject go = new GameObject("Damage Number");
             go.transform.position = point + Random.insideUnitSphere * 0.08f;
             TextMesh tm = go.AddComponent<TextMesh>();
-            tm.text = Mathf.Max(1, Mathf.RoundToInt(amount)).ToString();
+            tm.text = Mathf.Max(1, Mathf.RoundToInt(amount)).ToString() + (suffix ?? "");
             Fx.SetupText(tm, 0.1f + Mathf.Min(amount, 60f) * 0.002f, color);
             Impact i = go.AddComponent<Impact>();
             i.kind = Kind.Number;

@@ -26,6 +26,8 @@ namespace RingFighter
         public float torsoDrop = 0.4f;
         public float torsoRadius = 0.18f;
         public float headRadius = 0.13f;
+        [Tooltip("Damage multiplier when an enemy bolt hits your head.")]
+        public float headshotMultiplier = 1.5f;
 
         public float Health { get; private set; }
         public float Fraction { get { return maxHealth > 0f ? Mathf.Clamp01(Health / maxHealth) : 0f; } }
@@ -47,6 +49,8 @@ namespace RingFighter
             get { return HeadPosition + Vector3.down * torsoDrop; }
         }
 
+        public Vector3 HeadPoint { get { return HeadPosition; } }
+
         private Vector3 HeadPosition
         {
             get { return rig != null && rig.head != null ? rig.head.transform.position : new Vector3(0f, 1.6f, 0f); }
@@ -65,9 +69,10 @@ namespace RingFighter
         }
 
         /// <summary>Does a bolt travelling from 'a' to 'b' touch the head or torso? 'point' is where.</summary>
-        public bool SegmentHits(Vector3 a, Vector3 b, float boltRadius, out Vector3 point)
+        public bool SegmentHits(Vector3 a, Vector3 b, float boltRadius, out Vector3 point, out bool head)
         {
             point = b;
+            head = false;
             if (!IsAlive) return false;
             Vector3 head = HeadPosition;
             Vector3 c1, c2;
@@ -76,7 +81,8 @@ namespace RingFighter
             bool hitHead = d1 <= headRadius + boltRadius;
             bool hitTorso = d2 <= torsoRadius + boltRadius;
             if (!hitHead && !hitTorso) return false;
-            point = hitTorso && (!hitHead || d2 <= d1) ? c2 : c1;
+            head = hitHead && (!hitTorso || d1 - headRadius < d2 - torsoRadius);
+            point = head ? c1 : c2;
             return true;
         }
 
@@ -89,9 +95,10 @@ namespace RingFighter
             return (p - closest).magnitude;
         }
 
-        public void Hit(float amount, Vector3 point)
+        public void Hit(float amount, Vector3 point, bool headshot = false)
         {
             if (!IsAlive) return;
+            if (headshot) amount *= headshotMultiplier;
             Health = Mathf.Max(0f, Health - amount);
             HitFlash = 1f;
             if (rig != null)
@@ -100,7 +107,7 @@ namespace RingFighter
                 if (rig.rightHand != null) rig.rightHand.Haptic(0.9f, 0.2f);
             }
             Impact.Spark(point, new Color(1f, 0.25f, 0.2f), 0.3f);
-            MoveLog.Add("YOU WERE HIT for " + Mathf.RoundToInt(amount) + " (health " + Mathf.RoundToInt(Health) + ")");
+            MoveLog.Add((headshot ? "HEADSHOT! " : "") + "YOU WERE HIT for " + Mathf.RoundToInt(amount) + " (health " + Mathf.RoundToInt(Health) + ")");
             if (Health <= 0f) Die();
         }
 

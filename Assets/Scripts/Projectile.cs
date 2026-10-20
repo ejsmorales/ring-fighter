@@ -41,6 +41,13 @@ namespace RingFighter
             Vector3 dir = transform.forward;
             Vector3 from = transform.position;
 
+            // 0) Enemy bolts in the way: they cancel, or the stronger one punches through.
+            if (EnemyBolt.ClashWith(from, from + dir * step, radius, ref damage))
+            {
+                Destroy(gameObject);
+                return;
+            }
+
             // 1) Targets, by plain math (works even if colliders are missing in a build).
             IDamageable shapeTarget;
             Vector3 shapePoint;

@@ -4,8 +4,10 @@ using UnityEngine;
 namespace RingFighter
 {
     /// <summary>
-    /// The dummy's yellow bolt. Flies straight at where your chest was when it was fired (so a lean or duck dodges it).
-    /// A single shield absorbs it and gives a little ring energy back; a double shield reflects it back, faster and harder.
+    /// The dummy's bolt (yellow; orange when it is going for your head). Flies straight at where you were when it
+    /// was fired, so a lean, duck or dash dodges it. A single shield absorbs it and gives a little ring energy back;
+    /// a double shield reflects it back, faster and harder. Your own bolts and blasts clash with it (equal damage
+    /// cancels; the stronger one punches through, losing half of the weaker one's damage) and your laser cuts it.
     /// </summary>
     public class EnemyBolt : MonoBehaviour
     {
@@ -20,6 +22,7 @@ namespace RingFighter
 
         private TrainingDummy owner;
         private bool reflected;
+        private bool dead;
         private float age;
         private Renderer rend;
         private MaterialPropertyBlock block;
@@ -28,9 +31,11 @@ namespace RingFighter
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         public static readonly Color Yellow = new Color(1f, 0.85f, 0.15f);
+        public static readonly Color HeadOrange = new Color(1f, 0.4f, 0.08f);
         public static readonly Color ReflectGreen = new Color(0.3f, 1f, 0.5f);
+        private static readonly Color ClashBlack = new Color(0.08f, 0f, 0.14f);
 
-        public static EnemyBolt Spawn(Material material, Vector3 position, Vector3 direction, float speed, float damage, TrainingDummy owner)
+        public static EnemyBolt Spawn(Material material, Vector3 position, Vector3 direction, float speed, float damage, TrainingDummy owner, bool headShot = false)
         {
             GameObject go = Fx.Shape(PrimitiveType.Sphere, material, Vector3.one * 0.2f);
             go.name = "Enemy Bolt";
@@ -42,7 +47,7 @@ namespace RingFighter
             b.owner = owner;
             b.rend = go.GetComponent<Renderer>();
             b.block = new MaterialPropertyBlock();
-            b.Tint(Yellow);
+            b.Tint(headShot ? HeadOrange : Yellow);
             all.Add(b);
             return b;
         }
@@ -59,6 +64,96 @@ namespace RingFighter
             all.Remove(this);
         }
 
+        private void Kill()
+        {
+            dead = true;
+            all.Remove(this);
+            Destroy(gameObject);
+        }
+
+        // ---- Clashing with the player's attacks ----
+
+        /// <summary>
+        /// Called by each player projectile every frame with the path it is about to travel. If it meets an enemy
+        /// bolt: equal damage cancels both; otherwise the stronger one carries on with its damage reduced by half
+        /// of the weaker one's. Returns true if the player's projectile is used up ('damage' is updated either way).
+        /// </summary>
+        public static bool ClashWith(Vector3 from, Vector3 to, float projectileRadius, ref float damage)
+        {
+            for (int i = all.Count - 1; i >= 0; i--)
+            {
+                if (i >= all.Count) continue;
+                EnemyBolt b = all[i];
+                if (b == null || b.dead || b.reflected) continue;
+
+                // The enemy bolt covers about this much ground this frame; test both paths against each other.
+                Vector3 fwd = b.transform.forward;
+                float reach = b.speed * Time.deltaTime;
+                Vector3 c1, c2;
+                float gap = HitShapes.ClosestSegSeg(from, to, b.transform.position - fwd * reach, b.transform.position + fwd * reach, out float s, out float t, out c1, out c2);
+                if (gap > projectileRadius + b.radius) continue;
+
+                Vector3 point = (c1 + c2) * 0.5f;
+                float mine = damage;
+                float theirs = b.damage;
+                ClashBurst(point);
+
+                if (Mathf.Abs(mine - theirs) < 0.01f)
+                {
+                    b.Kill();
+                    damage = 0f;
+                    MoveLog.Add("Bolts cancelled (" + Mathf.RoundToInt(mine) + " vs " + Mathf.RoundToInt(theirs) + ")");
+                    return true;
+                }
+                if (mine > theirs)
+                {
+                    damage = mine - 0.5f * theirs;
+                    b.Kill();
+                    MoveLog.Add("Your shot broke through (" + Mathf.RoundToInt(mine) + " vs " + Mathf.RoundToInt(theirs) + ", now " + Mathf.RoundToInt(damage) + ")");
+                    continue;
+                }
+
+                b.damage = theirs - 0.5f * mine;
+                damage = 0f;
+                MoveLog.Add("Enemy bolt overpowered your shot (" + Mathf.RoundToInt(mine) + " vs " + Mathf.RoundToInt(theirs) + ", now " + Mathf.RoundToInt(b.damage) + ")");
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>The laser slices through any enemy bolt within 'width' of the line from 'from' to 'to'.</summary>
+        public static void CutAlong(Vector3 from, Vector3 to, float width)
+        {
+            for (int i = all.Count - 1; i >= 0; i--)
+            {
+                if (i >= all.Count) continue;
+                EnemyBolt b = all[i];
+                if (b == null || b.dead || b.reflected) continue;
+                Vector3 closest;
+                if (!SegmentPointDistance(from, to, b.transform.position, out closest, width + b.radius)) continue;
+                ClashBurst(b.transform.position);
+                MoveLog.Add("Laser cut an enemy bolt");
+                b.Kill();
+            }
+        }
+
+        private static bool SegmentPointDistance(Vector3 a, Vector3 b, Vector3 p, out Vector3 closest, float maxDistance)
+        {
+            Vector3 ab = b - a;
+            float len2 = ab.sqrMagnitude;
+            float t = len2 < 1e-8f ? 0f : Mathf.Clamp01(Vector3.Dot(p - a, ab) / len2);
+            closest = a + ab * t;
+            return (p - closest).magnitude <= maxDistance;
+        }
+
+        // A small dark burst where bolts collide.
+        private static void ClashBurst(Vector3 point)
+        {
+            Impact.Spark(point, ClashBlack, 0.4f);
+        }
+
+        // ---- Flight ----
+
         private void Tint(Color c)
         {
             if (rend == null) return;
@@ -69,10 +164,11 @@ namespace RingFighter
 
         private void Update()
         {
+            if (dead) return;
             age += Time.deltaTime;
             if (age >= lifetime)
             {
-                Destroy(gameObject);
+                Kill();
                 return;
             }
 
@@ -89,7 +185,7 @@ namespace RingFighter
                 {
                     target.TakeDamage(damage, point, dir * 3f);
                     MoveLog.Add("Reflected bolt HIT for " + Mathf.RoundToInt(damage));
-                    Destroy(gameObject);
+                    Kill();
                     return;
                 }
                 transform.position = to;
@@ -112,16 +208,17 @@ namespace RingFighter
                     {
                         Impact.Spark(sp, new Color(0.7f, 1f, 0.4f), 0.3f);
                         MoveLog.Add("Shield absorbed bolt (+" + Mathf.RoundToInt(shield.absorbRefund) + " energy)");
-                        Destroy(gameObject);
+                        Kill();
                         return;
                     }
                 }
 
                 Vector3 hit;
-                if (player.SegmentHits(from, to, radius, out hit))
+                bool head;
+                if (player.SegmentHits(from, to, radius, out hit, out head))
                 {
-                    player.Hit(damage, hit);
-                    Destroy(gameObject);
+                    player.Hit(damage, hit, head);
+                    Kill();
                     return;
                 }
             }

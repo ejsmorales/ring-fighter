@@ -97,7 +97,7 @@ namespace RingFighter
         }
 
         // Closest points between segments p1-q1 and p2-q2 (Ericson, Real-Time Collision Detection 5.1.9).
-        private static float ClosestSegSeg(Vector3 p1, Vector3 q1, Vector3 p2, Vector3 q2,
+        public static float ClosestSegSeg(Vector3 p1, Vector3 q1, Vector3 p2, Vector3 q2,
                                            out float s, out float t, out Vector3 c1, out Vector3 c2)
         {
             const float eps = 1e-6f;

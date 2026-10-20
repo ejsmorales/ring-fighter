@@ -262,6 +262,8 @@ namespace RingFighter
                 }
             }
 
+            EnemyBolt.CutAlong(origin, end, beamWidth);   // the beam slices through enemy bolts it crosses
+
             if (target != null)
             {
                 target.TakeDamage(damagePerSecond * Time.deltaTime, hitPoint, dir * (knockbackPerSecond * Time.deltaTime));

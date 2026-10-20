@@ -147,10 +147,8 @@ namespace RingFighter
 
         private void Hurt(IDamageable target, Vector3 point, Vector3 center)
         {
-            Vector3 push = point - center;
-            push.y = 0f;
-            push = push.sqrMagnitude > 0.0001f ? push.normalized * 0.6f : direction * 0.6f;
-            target.TakeDamage(damagePerSecond * Time.deltaTime, point, push, DamageKind.Area);
+            // No push: knockback used to shove the target out of the vortex before it could be lifted.
+            target.TakeDamage(damagePerSecond * Time.deltaTime, point, Vector3.zero, DamageKind.Area);
             target.OnWhirlwind(Time.deltaTime);
             if (!loggedHit)
             {

@@ -169,3 +169,7 @@ Record each headset session here: date, build, what worked, what didn't.
       (Whirlwind does not touch bolts for now.)
     - *Headshots:* 1.5x on direct hits, both ways. The dummy aims at your head about 15% of the time (orange glow
       warns you).
+
+- **2026-10-20 — fourth build.** First attempt failed to compile (`head` name clash in PlayerHealth, fixed). Then all
+  passed except the whirlwind, which only pushed the dummy back. Cause: its radial knockback ejected the dummy from
+  the vortex before the 0.35 s needed to lift it. Fix: whirlwind no longer pushes; lift after 0.15 s (untested).

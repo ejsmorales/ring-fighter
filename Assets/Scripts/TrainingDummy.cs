@@ -35,7 +35,7 @@ namespace RingFighter
 
         [Header("Whirlwind: lift, fall, slow")]
         [Tooltip("Seconds inside the whirlwind before it lifts the dummy.")]
-        public float liftAfter = 0.35f;
+        public float liftAfter = 0.15f;
         [Tooltip("How high (meters) the whirlwind lifts it.")]
         public float liftHeight = 2.2f;
         [Tooltip("Fall damage when it lands from the full lift height. Shorter falls do proportionally less.")]
@@ -200,6 +200,7 @@ namespace RingFighter
             slowedUntil = Time.time + slowDuration;
             windSeen = Time.time;
             if (air != Air.Grounded || Time.time < liftReadyTime) return;
+            if (windContact <= 0f) MoveLog.Add("Whirlwind caught the dummy");
             windContact += deltaTime;
             if (windContact >= liftAfter)
             {

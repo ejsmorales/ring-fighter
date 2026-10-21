@@ -28,4 +28,5 @@ Working agreements:
   (do / expected / what the debug panel shows); keep the regression list current.
 
 Current state and where to pick up: `docs/GAME_DESIGN.md` (playtest log, newest at the bottom) and
-`docs/TEST_PLAN.md` ("This build"). Active branches: `claude/vr-setup` (not yet merged to `main`) and `claude/vfx` (ring effects, branched from it, untested).
+`docs/TEST_PLAN.md` ("This build"). Active branch: `claude/vr-setup` (not yet merged to `main`). `claude/vfx` (ring effects) passed testing and was
+merged into it on 2026-10-21. Enemy character art is planned on `claude/enemy-model`.

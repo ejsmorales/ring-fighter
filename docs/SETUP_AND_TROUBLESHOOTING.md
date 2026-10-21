@@ -123,3 +123,8 @@ The scene builder regenerates `Assets/Scenes/TrainingArena.unity` and the `RF_*`
 rewrites some settings files. These changes are noise; `git restore .` discards them safely (it does not touch new,
 untracked files such as new art).
 
+
+### git: "Unable to create '.git/index.lock': File exists"
+A stale lock, usually left by a Claude session that ran git on the PC through the desktop app's file access (that
+access can't delete files, so git can't remove its own lock). Close Unity, then `Remove-Item .git\index.lock` and
+retry. Claude sessions with that access should only use read-only git (`git --no-optional-locks status/diff/log`).

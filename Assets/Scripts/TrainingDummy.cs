@@ -59,6 +59,18 @@ namespace RingFighter
         public Material healthBarMaterial;
         public Material healthBarBackMaterial;
         public GameObject visualsRoot; // optional: your own model instead of the placeholder shapes
+        [Tooltip("Tick when visualsRoot is an animated character: its own animations play knock-outs instead of the code tipping it over.")]
+        public bool animatedModel;
+        [Tooltip("Normal body tint. Grey for the placeholder shapes; white keeps a textured model's real colors.")]
+        public Color normalTint = new Color(0.78f, 0.78f, 0.82f);
+
+        [Header("Hand muzzle (animated model)")]
+        [Tooltip("If set (the model's right hand bone), the charge-up glow and bolts come from here instead of the chest.")]
+        public Transform muzzleBone;
+        [Tooltip("How far in front of the hand (meters, toward the player) the muzzle sits.")]
+        public float muzzleForwardOffset = 0.15f;
+        [Tooltip("After getting back up from a knock-out, the dummy stands still and holds fire this long (seconds) while the get-up animation plays.")]
+        public float getUpTime = 0f;
 
         [Header("Hit area")]
         [Tooltip("Radius (meters) of the invisible capsule that attacks test against.")]
@@ -67,6 +79,15 @@ namespace RingFighter
         public float hitHeight = 2.15f;
 
         public bool IsAlive { get; private set; }
+        /// <summary>True during the yellow/orange charge-up glow (read by the animation driver).</summary>
+        public bool IsCharging { get { return charging; } }
+        /// <summary>True while a whirlwind holds it in the air.</summary>
+        public bool IsAirborne { get { return air != Air.Grounded; } }
+        /// <summary>True while it is getting back up after a knock-out (no moving, no shooting).</summary>
+        public bool IsGettingUp { get { return Time.time < getUpUntil; } }
+        /// <summary>Raised whenever a hit is shown (damage number). The animation driver plays a flinch.</summary>
+        public event System.Action Damaged;
+
         public float Health { get; private set; }
 
         private Vector3 home;
@@ -99,6 +120,8 @@ namespace RingFighter
         private float windSeen = -10f;
         private float liftReadyTime;
         private float slowedUntil = -1f;
+        private float getUpUntil = -1f;
+        private float wanderClock;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -253,11 +276,14 @@ namespace RingFighter
         public void ResetFight()
         {
             Revive();
-            wasFighting = false;
         }
 
         private void Revive()
         {
+            bool wasDown = !IsAlive && Health <= 0f && deathTime > 0f;
+            getUpUntil = wasDown ? Time.time + getUpTime : -1f;
+            wasFighting = false;   // fresh attack timer (it used to fire instantly after respawning)
+            charging = false;
             IsAlive = true;
             air = Air.Grounded;
             airHeight = 0f;
@@ -299,6 +325,7 @@ namespace RingFighter
             {
                 Color c = pendingHeadshot ? new Color(1f, 0.45f, 0.2f) : (kind == DamageKind.Fall ? new Color(1f, 0.6f, 0.2f) : new Color(1f, 0.85f, 0.3f));
                 Impact.Hit(point, pendingDamage, c, lookTarget, true, pendingHeadshot ? "!" : null);
+                if (Damaged != null) Damaged();
                 if (pendingHeadshot) MoveLog.Add("HEADSHOT on the dummy");
                 pendingDamage = 0f;
                 pendingHeadshot = false;
@@ -349,7 +376,8 @@ namespace RingFighter
 
         private void UpdateAlive()
         {
-            float t = Time.time * wanderSpeed + wanderPhase;
+            if (!IsGettingUp) wanderClock += Time.deltaTime;   // stands still while getting up
+            float t = wanderClock * wanderSpeed + wanderPhase;
             Vector3 wander = new Vector3(Mathf.Sin(t) * wanderExtents.x, 0f, Mathf.Sin(t * 0.63f + 1.3f) * wanderExtents.z);
             knockOffset = Vector3.Lerp(knockOffset, Vector3.zero, 3f * Time.deltaTime);
             UpdateAir();
@@ -387,13 +415,24 @@ namespace RingFighter
                 return;
             }
 
+            // Getting up after a knock-out: no shooting yet.
+            if (IsGettingUp)
+            {
+                wasFighting = false;
+                charging = false;
+                HideOrb();
+                return;
+            }
+
             if (!wasFighting)
             {
                 wasFighting = true;
                 nextFireTime = Time.time + Mathf.Max(attackInterval, chargeTime + 0.5f) * 0.7f;
             }
 
-            Vector3 muzzle = transform.position + Vector3.up * 1.4f + transform.forward * 0.45f;
+            Vector3 muzzle = muzzleBone != null
+                ? muzzleBone.position + transform.forward * muzzleForwardOffset
+                : transform.position + Vector3.up * 1.4f + transform.forward * 0.45f;
             float untilFire = nextFireTime - Time.time;
             if (untilFire <= 0f)
             {
@@ -464,7 +503,7 @@ namespace RingFighter
             float since = Time.time - deathTime;
             // Topple over backwards in the first 0.6 seconds.
             float fall = Mathf.Clamp01(since / 0.6f);
-            if (visuals != null)
+            if (visuals != null && !animatedModel)   // an animated model plays its own knock-out
             {
                 visuals.localRotation = Quaternion.Euler(-90f * fall, 0f, 0f);
                 visuals.localPosition = new Vector3(0f, 0.15f * fall, 0f);
@@ -479,8 +518,10 @@ namespace RingFighter
             bool flashing = flashTimer > 0f;
             if (flashing) flashTimer -= Time.deltaTime;
 
-            Color alive = Slowed ? new Color(0.6f, 0.78f, 1f) : new Color(0.78f, 0.78f, 0.82f);   // bluish while its attacks are slowed
-            Color c = flashing ? new Color(1f, 0.35f, 0.3f) : (IsAlive ? alive : new Color(0.35f, 0.35f, 0.4f));
+            Color alive = Slowed ? new Color(0.6f, 0.78f, 1f) : normalTint;   // bluish while its attacks are slowed
+            Color down = normalTint * 0.55f;
+            down.a = 1f;
+            Color c = flashing ? new Color(1f, 0.35f, 0.3f) : (IsAlive ? alive : down);
             block.SetColor(BaseColorId, c);
             block.SetColor(ColorId, c);
             for (int i = 0; i < renderers.Length; i++)

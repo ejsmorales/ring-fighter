@@ -187,6 +187,9 @@ namespace RingFighter.EditorTools
             vfxLibrary.shield = fxShield;
             vfxGo.AddComponent<VfxSystem>();
 
+            // ---- Enemy character (if the art is in Assets/Art/Enemy on this PC) ----
+            AddEnemyModel(dummyGo, dummy);
+
             // ---- Save and register ----
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
@@ -197,6 +200,59 @@ namespace RingFighter.EditorTools
         }
 
         // ------------------------------------------------------------------
+
+        // Puts the Enemy01 character inside the dummy instead of the capsule shapes, with its material, animations
+        // and the driver that plays them. Without the art files this does nothing and the capsule dummy stays.
+        private static void AddEnemyModel(GameObject dummyGo, TrainingDummy dummy)
+        {
+            EnemyArtSetup.Result art = EnemyArtSetup.Prepare();
+            if (art == null || art.model == null) return;
+
+            GameObject model = (GameObject)PrefabUtility.InstantiatePrefab(art.model);
+            model.name = "Enemy01";
+            model.transform.SetParent(dummyGo.transform, false);
+            model.transform.localPosition = Vector3.zero;
+            model.transform.localRotation = Quaternion.identity;
+
+            foreach (Renderer r in model.GetComponentsInChildren<Renderer>(true))
+            {
+                Material[] mats = new Material[Mathf.Max(1, r.sharedMaterials.Length)];
+                for (int i = 0; i < mats.Length; i++) mats[i] = art.material;
+                r.sharedMaterials = mats;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            }
+
+            // The art should already be about 1.9 m tall; correct it if the import came out at a different size.
+            Bounds b = new Bounds();
+            bool any = false;
+            foreach (Renderer r in model.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!any) { b = r.bounds; any = true; }
+                else b.Encapsulate(r.bounds);
+            }
+            if (any && b.size.y > 0.3f && Mathf.Abs(b.size.y - 1.9f) > 0.25f)
+            {
+                Debug.Log("RingFighter enemy: model was " + b.size.y.ToString("0.00") + " m tall, scaling to 1.9 m.");
+                model.transform.localScale *= 1.9f / b.size.y;
+            }
+
+            Animator anim = model.GetComponent<Animator>();
+            if (anim == null) anim = model.AddComponent<Animator>();
+            anim.avatar = art.avatar;
+            anim.runtimeAnimatorController = art.controller;
+            anim.applyRootMotion = false;
+            anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+
+            dummy.visualsRoot = model;
+            dummy.animatedModel = true;
+            dummy.normalTint = Color.white;
+            dummy.headMinHeight = 1.6f;    // head of a 1.9 m character
+            dummy.hitHeight = 1.95f;
+            dummy.getUpTime = art.getUpSeconds;
+
+            EnemyAnimationDriver driver = dummyGo.AddComponent<EnemyAnimationDriver>();
+            driver.animator = anim;
+        }
 
         private static TrackedNode BuildHand(string name, TrackedNode.NodeType type, Transform parent, Material handMat, Material ringMat)
         {

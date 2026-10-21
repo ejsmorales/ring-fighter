@@ -24,9 +24,11 @@ Working agreements:
   Effects only read gameplay state; keep gameplay logic out of them. Every effect shader needs a material created in
   `RingFighterSceneBuilder` and referenced by the scene's VFX System (`VfxLibrary`), never loaded only with
   `Shader.Find`/`Resources`, or the Quest build strips it. New assets need `.meta` files.
+- Art: final models/textures in `Assets/Art/<Thing>/` (Git LFS), drafts outside the repo. Import settings, materials and
+  Animator controllers for art are created by editor code at build time (see `Assets/Editor/EnemyArtSetup.cs`), not by hand.
 - Update `docs/TEST_PLAN.md` with every change: replace "This build" with numbered tests for what changed
   (do / expected / what the debug panel shows); keep the regression list current.
 
 Current state and where to pick up: `docs/GAME_DESIGN.md` (playtest log, newest at the bottom) and
 `docs/TEST_PLAN.md` ("This build"). Active branch: `claude/vr-setup` (not yet merged to `main`). `claude/vfx` (ring effects) passed testing and was
-merged into it on 2026-10-21. Enemy character art is planned on `claude/enemy-model`.
+merged into it on 2026-10-21. Enemy character integration is on `claude/enemy-model` (art files committed from the owner's PC).

@@ -110,3 +110,16 @@ load these shaders by name only (`Shader.Find` / `Resources`): the Quest build s
 ### Effects are slow on the headset
 Pause (left menu button) and press **A** to drop effects quality (High, Low, Minimal), and make sure Bloom (**B**) is
 off. Tell Claude which setting first felt smooth so the defaults can be tuned.
+
+### Art files (models, textures) and Git LFS
+`.fbx`, `.png` and other binary art are stored with Git LFS (see `.gitattributes`). Each PC needs Git LFS once
+(`git lfs install`; Git for Windows includes it). Enemy art lives in `Assets/Art/Enemy` (finals only; Meshy drafts
+stay outside the repo in `C:\Dev\RingFighterArt`). Commit art together with the `.meta` files Unity generates on
+first import, or the other PC gets different IDs and loses references. Don't hand-edit import settings:
+`Assets/Editor/EnemyArtSetup.cs` sets them during the build.
+
+### Build left modified materials/scene/settings in `git status`
+The scene builder regenerates `Assets/Scenes/TrainingArena.unity` and the `RF_*` materials every build, and Unity
+rewrites some settings files. These changes are noise; `git restore .` discards them safely (it does not touch new,
+untracked files such as new art).
+

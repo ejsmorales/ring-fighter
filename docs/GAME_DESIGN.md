@@ -204,3 +204,11 @@ Record each headset session here: date, build, what worked, what didn't.
 
 - **2026-10-21 — effects build passed: "looking great".** `claude/vfx` merged into `claude/vr-setup` (fast-forward).
   Whirlwind lift confirmed working (dummy is lifted, drops, takes fall damage).
+
+- **2026-10-21 — Enemy01 character (branch `claude/enemy-model`).** Original villain made with Meshy (paid plan,
+  private generations) in a separate conversation: 18.7k tris, 24-bone humanoid rig, 2K textures, six clips (idle,
+  charge_shoot, hit_react, lifted_falling, knocked_out, get_up). His weapon is a laser-pointer pen in the right hand;
+  the beam and glow are effects spawned from that hand. Integration: build-time import setup, Animator driven from
+  dummy state, flinch rate-limited for the laser, get-up at 2x speed during which he holds still and holds fire.
+  Fixed on the way: the dummy fired instantly after respawning (stale attack timer). Untested.
+

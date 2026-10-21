@@ -29,7 +29,7 @@ namespace RingFighter
         public static void Hit(Vector3 point, float amount, Color color, Transform viewer, bool sound = true, string suffix = null)
         {
             float size = Mathf.Clamp(0.15f + amount * 0.012f, 0.15f, 0.7f);
-            SpawnBurst(point, color, size);
+            SpawnBurst(point, color, size, true);
             SpawnNumber(point + Vector3.up * 0.25f, amount, color, viewer, suffix);
             if (sound) PlayHit(point, amount);
         }
@@ -41,8 +41,15 @@ namespace RingFighter
             if (sound) PlayHit(point, 20f);
         }
 
-        private static void SpawnBurst(Vector3 point, Color color, float size)
+        private static void SpawnBurst(Vector3 point, Color color, float size, bool toGreen = false)
         {
+            // Glow effects first. A very dark colour (the clash burst) can't show up when added to the scene, so it
+            // gets a bright flash and sparks AND the old dark burst below.
+            bool dark = Mathf.Max(color.r, Mathf.Max(color.g, color.b)) < 0.3f;
+            Color fxColor = dark ? new Color(1f, 0.9f, 0.6f) : color;
+            bool drawn = BurstFx.PlayImpact(point, fxColor, size, toGreen && !dark);
+            if (drawn && !dark) return;
+
             GameObject go = Fx.Shape(PrimitiveType.Sphere, GetBurstMaterial(), Vector3.one * 0.05f);
             go.name = "Impact Burst";
             go.transform.position = point;

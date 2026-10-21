@@ -62,6 +62,12 @@ namespace RingFighter
         private Transform beam;
         private Transform tip;
 
+        /// <summary>The placeholder beam while the laser fires, null otherwise (read by LaserVfx).</summary>
+        public Transform BeamPlaceholder { get { return beam; } }
+
+        /// <summary>The placeholder tip sphere while the laser fires, null otherwise (read by LaserVfx).</summary>
+        public Transform TipPlaceholder { get { return tip; } }
+
         private void Reset()
         {
             priority = 0;

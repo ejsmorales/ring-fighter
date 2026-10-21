@@ -20,6 +20,12 @@ namespace RingFighter
         public float reflectSpeedMultiplier = 2f;
         public float reflectDamage = 25f;
 
+        /// <summary>True once a double shield has reflected this bolt (read by EnemyBoltVfx).</summary>
+        public bool IsReflected { get { return reflected; } }
+
+        /// <summary>True if this bolt was aimed at your head (read by EnemyBoltVfx for the orange warning glow).</summary>
+        public bool HeadShot { get; private set; }
+
         private TrainingDummy owner;
         private bool reflected;
         private bool dead;
@@ -47,7 +53,9 @@ namespace RingFighter
             b.owner = owner;
             b.rend = go.GetComponent<Renderer>();
             b.block = new MaterialPropertyBlock();
+            b.HeadShot = headShot;
             b.Tint(headShot ? HeadOrange : Yellow);
+            go.AddComponent<EnemyBoltVfx>();   // visuals only; harmless if the effects are unavailable
             all.Add(b);
             return b;
         }

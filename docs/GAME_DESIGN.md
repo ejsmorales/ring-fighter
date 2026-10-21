@@ -53,6 +53,13 @@ curves shots that are close to the target (bolt 9°, blast 14°).
   X/Y on the left, thumbstick (tilt and click). The menu/Oculus buttons belong to the system. Y currently
   toggles the debug panel; A/B tune the aim tilt while the panel shows.
 - Neutral moves (for example, recharge stance, grab/pull, construct wall).
+- **Whirlwind, two gameplay variants** (owner ideas, 2026-10-20; the VFX pass only changed how it *looks*):
+  1. *Ground circle, erupts on release:* the whirlwind travels along the floor as an energy circle toward the
+     enemy; when the trigger is released it erupts upward, launching and damaging the enemy as green wind circles
+     around it. (Today the lift happens after 0.15 s of contact while the trigger is still held.)
+  2. *Horizontal whirl from the hand:* the whirl emanates from the ring hand pointing at the enemy, parallel to the
+     floor (wind perpendicular to the floor); on contact it curves upward as it launches the enemy.
+  Both change the move's logic (timing, path, hit detection), so they need their own branch and test plan.
 
 ## Roadmap
 
@@ -61,7 +68,8 @@ curves shots that are close to the target (bolt 9°, blast 14°).
 2. **Feedback**: sounds, hit flashes, impact effects, clearer energy display. (Mostly done: haptics, flash, burst, numbers, HUD.)
 3. **Enemy fights back** (current, first pass built 2026-10-19): the dummy fires a yellow bolt; player health and HUD; shield absorbs, double shield reflects. Next: blocking enemy, more attack types, faster/random rhythm for difficulty.
 4. **Movement**: short dash/teleport to dodge.
-5. **Art pass**: character model for the opponent, arena, ring effects (free asset packs).
+5. **Art pass**: character model for the opponent, arena (free asset packs). **Ring effects: first pass built
+   2026-10-20** (branch `claude/vfx`, see the playtest log); still to do: sound for the effects, a real arena look.
 6. **More moves and combos** from the backlog.
 7. Menus, rounds, win/lose flow.
 
@@ -173,3 +181,23 @@ Record each headset session here: date, build, what worked, what didn't.
 - **2026-10-20 — fourth build.** First attempt failed to compile (`head` name clash in PlayerHealth, fixed). Then all
   passed except the whirlwind, which only pushed the dummy back. Cause: its radial knockback ejected the dummy from
   the vortex before the 0.35 s needed to lift it. Fix: whirlwind no longer pushes; lift after 0.15 s (untested).
+
+- **2026-10-20 (night) — ring effects pass (branch `claude/vfx`, built in the cloud, untested).** Gameplay logic is
+  unchanged; every effect is drawn by separate components that read the moves' state.
+  - **Decisions (grill):**
+    - *Overall look:* a **lightsaber glow in green**: a near-white hot core inside a saturated green halo. Done with
+      layered additive shaders ("fake glow", nearly free on Quest 3). Real bloom is an optional toggle, off by default.
+    - *Enemy:* **yellow** glow, **orange** when it is aimed at your head (the orange is the 1.5x head-shot warning
+      from the earlier design session, not decoration). Menacing flicker, ember trail, same streak shape as yours;
+      a bolt reflected by the double shield turns your green.
+    - *Your bolt:* elongated streak with a fading tail. *Laser:* blade-style beam (white core, shimmering green
+      body, halo), muzzle flare, sparking hot spot where it lands.
+    - *Shield:* hex-grid barrier with a bright rim and a ripple from each bolt hit; the double shield is brighter.
+    - *Charged blast:* pulsing sun-orb with inward sparks while charging, comet tail in flight, and an **explosion
+      on every ending** (target, floor, or timing out). *Impacts:* white-green flash, shockwave ring facing you, sparks.
+    - *Whirlwind (visual only):* travels as a flat glowing energy circle on the floor and rises into a green funnel
+      when it catches the enemy (on contact, not on release). Owner's two gameplay variants are in the ideas backlog.
+    - *Controls:* the pause menu has an effects panel: **A** cycles quality (High / Low / Minimal = no particles),
+      **B** toggles bloom. Saved on the headset. This is the safety net because Quest performance can't be
+      measured from the cloud.
+  - Dummy hit colours stay yellow / orange (orange = head shot); each hit also gets the white-green flash.

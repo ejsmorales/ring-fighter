@@ -33,6 +33,12 @@ namespace RingFighter
         private float charge;      // 0 to 1
         private GameObject orb;
 
+        /// <summary>The placeholder orb while charging, null otherwise (read by BlastChargeVfx).</summary>
+        public Transform OrbPlaceholder { get { return orb != null ? orb.transform : null; } }
+
+        /// <summary>Current charge, 0 to 1 (read by BlastChargeVfx).</summary>
+        public float Charge01 { get { return charge; } }
+
         private void Reset()
         {
             priority = 30;
@@ -114,7 +120,7 @@ namespace RingFighter
                 Vector3 dir = AimDirection();
                 if (aimAssistAngle > 0f)
                     dir = AimAssist.Adjust(origin, dir, aimAssistAngle, out assisted);
-                Projectile.Spawn(blastMaterial, origin, dir, speed, Mathf.Lerp(minDamage, maxDamage, charge), radius, knockback);
+                Projectile.Spawn(blastMaterial, origin, dir, speed, Mathf.Lerp(minDamage, maxDamage, charge), radius, knockback, true);
                 ctx.Left.Haptic(0.9f, 0.15f);
                 ctx.Right.Haptic(0.9f, 0.15f);
                 MoveLog.Add("Blast fired " + Mathf.RoundToInt(charge * 100f) + "%" + (assisted ? " (assist)" : ""));

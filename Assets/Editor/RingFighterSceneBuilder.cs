@@ -15,6 +15,9 @@ namespace RingFighter.EditorTools
     {
         private const string ScenePath = "Assets/Scenes/TrainingArena.unity";
         private const string MaterialFolder = "Assets/Materials";
+        private const string VfxFolder = "Assets/VFX";
+        private const string VfxShaderFolder = "Assets/VFX/Shaders";
+        private const string VfxMaterialFolder = "Assets/VFX/Materials";
 
         [MenuItem("Ring Fighter/Build Training Scene")]
         public static void BuildTrainingScene()
@@ -36,6 +39,10 @@ namespace RingFighter.EditorTools
         {
             EnsureFolder("Assets", "Materials");
             EnsureFolder("Assets", "Scenes");
+            EnsureFolder("Assets", "VFX");
+            EnsureFolder(VfxFolder, "Shaders");
+            EnsureFolder(VfxFolder, "Materials");
+            EnsureFolder(VfxFolder, "Textures");
 
             // ---- Materials ----
             Material floorMat = GetMaterial("RF_Floor", new Color(0.13f, 0.15f, 0.2f), false, false);
@@ -56,6 +63,14 @@ namespace RingFighter.EditorTools
             Material hudEnergy = GetMaterial("RF_HudEnergy", new Color(0.2f, 1f, 0.5f), true, false);
             Material hudBack = GetMaterial("RF_HudBack", new Color(0.05f, 0.07f, 0.07f), true, false);
             Material hudFlash = GetMaterial("RF_HudFlash", new Color(1f, 1f, 1f, 1f), true, true);
+
+            // Effect shader materials (Assets/VFX). The scene's VFX System object references them, which is what
+            // keeps the Quest build from stripping the shaders; the effects clone these at runtime.
+            Material fxGlow = GetVfxMaterial("RFX_Glow", "RF_Glow");
+            Material fxParticle = GetVfxMaterial("RFX_Particle", "RF_Particle");
+            Material fxRingDisc = GetVfxMaterial("RFX_RingDisc", "RF_RingDisc");
+            Material fxFunnel = GetVfxMaterial("RFX_Funnel", "RF_Funnel");
+            Material fxShield = GetVfxMaterial("RFX_Shield", "RF_Shield");
             AssetDatabase.SaveAssets();
 
             // ---- New scene ----
@@ -162,6 +177,16 @@ namespace RingFighter.EditorTools
             dummyHit.height = 2.2f;
             dummyHit.radius = 0.35f;
 
+            // ---- Visual effects (shaders, particles; reads the moves, changes no gameplay) ----
+            GameObject vfxGo = new GameObject("VFX System");
+            VfxLibrary vfxLibrary = vfxGo.AddComponent<VfxLibrary>();
+            vfxLibrary.glow = fxGlow;
+            vfxLibrary.particle = fxParticle;
+            vfxLibrary.ringDisc = fxRingDisc;
+            vfxLibrary.funnel = fxFunnel;
+            vfxLibrary.shield = fxShield;
+            vfxGo.AddComponent<VfxSystem>();
+
             // ---- Save and register ----
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
@@ -232,6 +257,33 @@ namespace RingFighter.EditorTools
             if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", color);
             if (m.HasProperty("_Color")) m.SetColor("_Color", color);
             if (transparent) MakeTransparent(m);
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        // An effect material: created once in Assets/VFX/Materials with its shader assigned straight from the
+        // shader asset (not Shader.Find), and re-assigned on every rebuild so it can't be lost.
+        private static Material GetVfxMaterial(string materialName, string shaderFile)
+        {
+            string shaderPath = VfxShaderFolder + "/" + shaderFile + ".shader";
+            Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(shaderPath);
+            if (shader == null)
+            {
+                Debug.LogError("Ring Fighter: effect shader not found at " + shaderPath + ". Effects will be off until it is restored.");
+                return null;
+            }
+
+            string path = VfxMaterialFolder + "/" + materialName + ".mat";
+            Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (m == null)
+            {
+                m = new Material(shader);
+                AssetDatabase.CreateAsset(m, path);
+            }
+            else if (m.shader != shader)
+            {
+                m.shader = shader;
+            }
             EditorUtility.SetDirty(m);
             return m;
         }

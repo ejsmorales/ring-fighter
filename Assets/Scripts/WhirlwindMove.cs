@@ -40,6 +40,15 @@ namespace RingFighter
         private readonly System.Collections.Generic.List<Vector3> hitPoints = new System.Collections.Generic.List<Vector3>();
         private bool loggedHit;
 
+        /// <summary>The whirlwind's ground position while it runs, null otherwise (read by WhirlwindVfx).</summary>
+        public Transform RootTransform { get { return root != null ? root.transform : null; } }
+
+        /// <summary>The placeholder discs (read by WhirlwindVfx so it can hide them).</summary>
+        public Transform[] Discs { get { return discs; } }
+
+        /// <summary>True while the whirlwind is touching a target this frame (read by WhirlwindVfx).</summary>
+        public bool InContact { get; private set; }
+
         private void Reset()
         {
             priority = 20;
@@ -143,6 +152,7 @@ namespace RingFighter
 
                 Hurt(target, overlap[i].ClosestPoint(center), center);
             }
+            InContact = hitThisFrame.Count > 0;
         }
 
         private void Hurt(IDamageable target, Vector3 point, Vector3 center)
@@ -169,6 +179,7 @@ namespace RingFighter
             root = null;
             discs = null;
             hand = null;
+            InContact = false;
         }
     }
 }

@@ -52,7 +52,48 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 | `Fx.cs` | Helper to make collider-less placeholder shapes. |
 | `AimAssist.cs` | Targets register an aim point; shots within a few degrees are redirected onto the nearest live target. |
 | `MoveLog.cs` | Short list of recent move events (fired / skipped and why) for the debug readout. |
-| `DebugReadout.cs` | Floating panel (front-left) showing per-hand trigger, speed, pose, circling angle, active moves, and the move log. Created by `RingController` when *Show Debug Readout* is ticked; Y on the left controller toggles it. |
+| `DebugReadout.cs` | (A/B aim tuning is ignored while paused so it can't clash with the pause menu's A/B.) Floating panel (front-left) showing per-hand trigger, speed, pose, circling angle, active moves, and the move log. Created by `RingController` when *Show Debug Readout* is ticked; Y on the left controller toggles it. |
+
+## Visual effects (VFX)
+
+Effects are drawn by separate components that **read** the moves' state; they never change gameplay. Code lives in
+`Assets/Scripts/VFX`; shaders, materials and textures live in `Assets/VFX` (`Shaders/`, `Materials/`, `Textures/`;
+the shaders are procedural, so `Textures/` is empty for now). Look: white-hot core inside a green halo (lightsaber),
+faked with additive shaders and a few layered shells. Real bloom is an optional toggle.
+
+```
+VFX System (scene object, made by RingFighterSceneBuilder)
+ ├─ VfxLibrary   template materials (Assets/VFX/Materials), one per shader; the scene references them
+ └─ VfxSystem    attaches LaserVfx / BlastChargeVfx / ShieldVfx / WhirlwindVfx to the moves, owns pooled
+                 BurstFx objects, switches bloom, adds VfxPauseMenu
+```
+
+| File (`Assets/Scripts/VFX`) | Job |
+| --- | --- |
+| `VfxLibrary.cs`, `VfxMaterials.cs` | The library holds the template materials; `VfxMaterials` clones them at runtime (shared glow materials are cached, animated ones are per owner). No `Resources` or `Shader.Find`: the shaders stay in the Quest build because a scene object references them. |
+| `VfxSystem.cs` | Boots the effects, bloom volume (URP Bloom, camera post-processing flag). If the library is missing it does nothing and the old placeholder shapes show. |
+| `VfxSettings.cs` | Quality (High / Low / Minimal) and bloom, saved in PlayerPrefs (`RF_VfxQuality`, `RF_VfxBloom`). |
+| `VfxPauseMenu.cs` | The panel under the PAUSED sign: A = quality, B = bloom. |
+| `ProjectileVfx.cs` | Added to every `Projectile`: bolt streak or blast sun-orb, comet tail, embers, and the blast explosion when it ends (told by `Projectile.NotifyEnd`). |
+| `EnemyBoltVfx.cs` | Added to every `EnemyBolt`: yellow / orange (`HeadShot`) / green (`IsReflected`) with flicker and embers. |
+| `LaserVfx.cs`, `BlastChargeVfx.cs`, `ShieldVfx.cs`, `WhirlwindVfx.cs` | Read their move's placeholder shapes (`BeamPlaceholder`, `OrbPlaceholder`, `DiscTransform`, `RootTransform`, `InContact`, ...), hide them and draw the effect. |
+| `BurstFx.cs` | Pooled one-shot hit effects: Impact (flash, ring, sparks) and Explosion (adds shell and ground ring). Called from `Impact.cs`. |
+| `VfxParticles.cs`, `VfxMeshes.cs` | Small particle-system builder (world space, one shared additive material, Emit bursts) and the funnel mesh. |
+
+Shaders (`Assets/VFX/Shaders`): `RF_Glow` (fresnel glow shell with tail fade, pulse, shimmer), `RF_Particle` (soft
+dot / spark streak), `RF_RingDisc` (rings, spiral-arm ground circle), `RF_Funnel` (wind streaks), `RF_Shield`
+(hex grid, rim, ripple). All unlit, additive, no textures or keywords, with single-pass-instanced stereo macros and
+`UnityPerMaterial` constant buffers (SRP Batcher compatible).
+
+Small read-only hooks added to existing scripts (no logic changes): `LaserMove.BeamPlaceholder/TipPlaceholder`,
+`ChargedBlastMove.OrbPlaceholder/Charge01`, `ShieldMove.DiscTransform/ImpactCount/LastImpactPoint`,
+`WhirlwindMove.RootTransform/Discs/InContact`, `EnemyBolt.IsReflected/HeadShot`, `Projectile.isBlast` (set by the
+charged blast), and `Impact.SpawnBurst` calls `BurstFx` first.
+
+**Adding or changing an effect:** put the shader in `Assets/VFX/Shaders`, add a material for it in
+`RingFighterSceneBuilder.GetVfxMaterial`, add a field for it to `VfxLibrary`, assign it in the builder's "VFX System"
+block, then clone it through `VfxMaterials`. Include `.meta` files for new assets. If a shader is only loaded by
+name, the Quest build can strip it.
 
 ## How a move is chosen each frame
 
@@ -95,5 +136,5 @@ saved in PlayerPrefs under `RF_AimPitch`. All pose checks (laser, shield) use th
 ## Conventions
 
 - Tuning values are public fields with tooltips, so they're adjustable in the Inspector.
-- Visual effects are built from primitives via `Fx.Shape` until real art arrives.
+- Visual effects are built from primitives via `Fx.Shape` plus the effect shaders (see "Visual effects" above), until real art arrives.
 - Unity files are committed as text (Force Text) with `.meta` files. Never commit `Library/`, `Temp/`, `Logs/`, `Builds/`.

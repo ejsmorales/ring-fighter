@@ -20,8 +20,12 @@ Working agreements:
 - Push work to a `claude/...` branch; the owner pulls, builds to the headset, and reports back.
 - Update the docs (design decisions, playtest log, troubleshooting) as part of each change.
 - Keep tuning values as public fields with tooltips. New moves extend `Move`.
+- Visual effects: components in `Assets/Scripts/VFX`, shaders/materials/textures in `Assets/VFX/{Shaders,Materials,Textures}`.
+  Effects only read gameplay state; keep gameplay logic out of them. Every effect shader needs a material created in
+  `RingFighterSceneBuilder` and referenced by the scene's VFX System (`VfxLibrary`), never loaded only with
+  `Shader.Find`/`Resources`, or the Quest build strips it. New assets need `.meta` files.
 - Update `docs/TEST_PLAN.md` with every change: replace "This build" with numbered tests for what changed
   (do / expected / what the debug panel shows); keep the regression list current.
 
 Current state and where to pick up: `docs/GAME_DESIGN.md` (playtest log, newest at the bottom) and
-`docs/TEST_PLAN.md` ("This build"). Active branch: `claude/vr-setup` (not yet merged to `main`).
+`docs/TEST_PLAN.md` ("This build"). Active branches: `claude/vr-setup` (not yet merged to `main`) and `claude/vfx` (ring effects, branched from it, untested).

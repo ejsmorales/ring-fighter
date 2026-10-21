@@ -40,6 +40,13 @@ namespace RingFighter
         private readonly float[] pressTime = new float[2];
         private readonly bool[] wasHeld = new bool[2];
 
+        /// <summary>The placeholder disc while the shield is up, null otherwise (read by ShieldVfx).</summary>
+        public Transform DiscTransform { get { return disc != null ? disc.transform : null; } }
+
+        /// <summary>Counts bolts that struck the barrier, and where the last one did (read by ShieldVfx for the ripple).</summary>
+        public int ImpactCount { get; private set; }
+        public Vector3 LastImpactPoint { get; private set; }
+
         public bool IsBlocking { get { return IsActive && disc != null; } }
         public bool IsDoubled { get { return IsBlocking && second != null; } }
 
@@ -74,6 +81,8 @@ namespace RingFighter
             offset -= n * Vector3.Dot(offset, n);
             if (offset.magnitude > d.localScale.x * 0.5f + boltRadius) return false;
             point = p;
+            ImpactCount++;
+            LastImpactPoint = p;
             return true;
         }
 

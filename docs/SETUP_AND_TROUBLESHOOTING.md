@@ -95,3 +95,18 @@ Fixed 2026-10-18 by renaming the locals (`$usbDev`, `$wifiDev`, `$headsetIp`). I
 ### Build failed: CS0841 / CS0136 'head' in PlayerHealth.cs (2026-10-19)
 A new `out bool head` parameter clashed with an existing local variable of the same name in `SegmentHits`. Fixed by
 renaming the local to `headPos`. (The cloud syntax check can't catch name clashes like this; only Unity's compiler does.)
+
+### Effects look like plain shapes, or the panel says `VFX unavailable (rebuild scene)` (2026-10-20)
+The "VFX System" object is added by **Ring Fighter > Build Training Scene** and is saved into
+`Assets/Scenes/TrainingArena.unity`. A scene built before the effects pass (or a build with `-SkipScene`) doesn't
+have it, so the old placeholder shapes are drawn. Rebuild the scene (the default `tools\build-quest.ps1` does).
+
+### An effect is pink, black or invisible on the headset (2026-10-20)
+Pink means a shader failed to compile or was stripped. Check `Builds\unity-build.log` for lines containing `RF_`.
+The effect shaders (`Assets/VFX/Shaders`) are referenced by the materials in `Assets/VFX/Materials`, which the scene's
+VFX System object holds; if someone deletes a material or the object, rebuild the scene to recreate them. Don't
+load these shaders by name only (`Shader.Find` / `Resources`): the Quest build strips shaders nothing references.
+
+### Effects are slow on the headset
+Pause (left menu button) and press **A** to drop effects quality (High, Low, Minimal), and make sure Bloom (**B**) is
+off. Tell Claude which setting first felt smooth so the defaults can be tuned.

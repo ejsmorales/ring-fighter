@@ -82,7 +82,7 @@ namespace RingFighter
 
             // While the panel is showing: A (right controller) tilts the aim down 5 more degrees, B tilts it back up.
             // Use it to find the angle where a relaxed wrist points at the dummy. The value is remembered.
-            if (panel.activeSelf && ctx.Right != null)
+            if (panel.activeSelf && ctx.Right != null && !PauseControl.IsPaused)
             {
                 bool a = ctx.Right.PrimaryButton;
                 bool b = ctx.Right.SecondaryButton;

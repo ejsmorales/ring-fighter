@@ -59,5 +59,5 @@ lines plus, if you can, the lines containing `RF_` from `Builds\unity-build.log`
 | R12 | Pause with the left menu button | Freezes and resumes (works as of 2026-10-19) |
 | R13 | Off-hand stick movement | Dash and Smooth both work (pass as of 2026-10-19) |
 | R14 | Bolt clashes, laser cuts bolts, headshots both ways, orange head-aimed shots | Passed 2026-10-20 |
-| R15 | Whirlwind keeps going while the trigger is held (no circling needed after start) | — |
+| R15 | Whirlwind keeps going while the trigger is held; contact lifts the dummy, it drops and takes ~40 fall damage | Passed 2026-10-21 |
 | R16 | Whirlwind lift (fix from 2026-10-20, not yet confirmed): steer it onto the dummy with the trigger held | Dummy is **not** pushed away; within a moment it rises ~2.2 m, hangs, drops; ~40 fall damage; vortex damage keeps ticking; dummy turns light blue and shoots ~20% slower for 6 s. Panel: `Whirlwind caught the dummy`, `Dummy lifted by whirlwind`, `Dummy landed: fall damage 40` |

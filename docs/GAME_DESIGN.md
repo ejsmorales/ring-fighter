@@ -203,4 +203,4 @@ Record each headset session here: date, build, what worked, what didn't.
   - Dummy hit colours stay yellow / orange (orange = head shot); each hit also gets the white-green flash.
 
 - **2026-10-21 — effects build passed: "looking great".** `claude/vfx` merged into `claude/vr-setup` (fast-forward).
-  Whirlwind lift result (R16) not yet reported.
+  Whirlwind lift confirmed working (dummy is lifted, drops, takes fall damage).

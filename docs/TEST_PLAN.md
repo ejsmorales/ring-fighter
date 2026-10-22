@@ -8,30 +8,20 @@ Before testing: press **Y** (left controller) to show the debug panel. Its "Rece
 something didn't. The top lines show the ring hand, focus distance and the physics self-test.
 (Everything in this build is untested: built in the cloud, not yet run on the headset.)
 
-## This build — Enemy01 character model (2026-10-21, branch `claude/enemy-model`)
+## This build — Enemy01 at full height (2026-10-21)
 
-The capsule dummy is replaced by the Enemy01 character (Meshy art in `Assets/Art/Enemy`), with animations driven by
-the game: idle, charge/shoot, flinch, lifted, knocked out, get up. Bolts now come from his right hand (the pen).
-Import settings, material and Animator are set up automatically by the build. Gameplay is unchanged except: the
-dummy holds still and holds fire while getting up after a knock-out, and it no longer fires instantly on respawn.
-Untested (built in the cloud only).
+Last build: the character worked and looked fine but was too short. The model is about 2.19 m tall; the setup had
+shrunk it to 1.9 m. It now keeps its own size, and the hit capsule, head zone, chest aim point and health bar follow
+his height. Untested.
 
 | # | Do this | Expected | Panel shows |
 | --- | --- | --- | --- |
-| T1 | Launch, look at the opponent | The character stands where the dummy was, about your height-ish (1.9 m), textured (not pink, not white), **facing you**, playing a breathing idle. Tell Claude if he faces away or sideways | — |
-| T2 | Watch him attack | During the yellow/orange glow he plays the aim/shoot animation; the glow and the bolt come from his **right hand**, not his chest | `Dummy fires` |
-| T3 | Hit him with a bolt | Short flinch animation, then back to idle. Damage numbers as before | `HIT ...` |
-| T4 | Hold the laser on him | He flinches every ~0.4 s at most, not every frame (no jitter) | `Laser HIT ...` |
-| T5 | Whirlwind him | He is lifted with the lifted/falling animation and drops; fall damage as before | `Dummy lifted by whirlwind` |
-| T6 | Knock him out | He plays the knock-out animation (no stiff tipping over). After ~3.5 s he gets up (about 4 s), standing still and **not shooting** until he is up | `Dummy knocked out!` |
-| T7 | Headshots | Aim at his actual head: headshots still register (orange "!" number) | `HEADSHOT on the dummy` |
-| T8 | Body shots | Aim at his chest/legs: normal damage; shots don't pass through his visible body | — |
-| T9 | Damage flash / slowed tint | He flashes red when hit; light blue tint while slowed by the whirlwind; textures still visible | — |
-| T10 | Performance | No stutter compared with the capsule dummy (try the effects quality on High) | — |
-| T11 | Overall look | Does he read as a villain at 5.5 m? Anything wrong (scale, feet in the floor, floating, stretched)? | Report |
-
-If something looks broken, the build log (`Builds\unity-build.log`) has lines starting `RingFighter enemy:` that say
-whether the rig mapped as humanoid and how many clips loaded.
+| T1 | Look at him | About 2.2 m tall, clearly taller than you. Feet on the floor, health bar just above his head | — |
+| T2 | Shoot his head | Headshot (orange "!" number) when hitting from the neck up | `HEADSHOT on the dummy` |
+| T3 | Shoot his chest and legs | Normal hits; nothing passes through his visible body, and shots above his head miss | `HIT ...` |
+| T4 | Aim assist | Shots that are nearly on target curve toward his chest, not his belly | — |
+| T5 | Double-shield reflect | Reflected bolt flies back at his chest | `Reflected bolt HIT` |
+| T6 | Is this the right height now? | If you want him taller still, tell Claude a number (e.g. 2.5 m) | Report |
 
 ## Regression (every build)
 
@@ -51,6 +41,7 @@ whether the rig mapped as humanoid and how many clips loaded.
 | R12 | Pause with the left menu button | Freezes and resumes (works as of 2026-10-19) |
 | R13 | Off-hand stick movement | Dash and Smooth both work (pass as of 2026-10-19) |
 | R14 | Bolt clashes, laser cuts bolts, headshots both ways, orange head-aimed shots | Passed 2026-10-20 |
+| R17 | Enemy01 animations: idle, aim/shoot from the right hand, flinch, lifted, knocked out, get up (no shooting while getting up) | Passed 2026-10-21 |
 | R16 | Ring effects (bolts, laser, shields, whirlwind, blast, impacts, pause effects panel) | Passed 2026-10-21 |
 | R15 | Whirlwind keeps going while the trigger is held; contact lifts the dummy, it drops and takes ~40 fall damage | Passed 2026-10-21 |
 | R16 | Whirlwind lift (fix from 2026-10-20, not yet confirmed): steer it onto the dummy with the trigger held | Dummy is **not** pushed away; within a moment it rises ~2.2 m, hangs, drops; ~40 fall damage; vortex damage keeps ticking; dummy turns light blue and shoots ~20% slower for 6 s. Panel: `Whirlwind caught the dummy`, `Dummy lifted by whirlwind`, `Dummy landed: fall damage 40` |

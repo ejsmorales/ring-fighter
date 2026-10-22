@@ -188,7 +188,7 @@ namespace RingFighter.EditorTools
             vfxGo.AddComponent<VfxSystem>();
 
             // ---- Enemy character (if the art is in Assets/Art/Enemy on this PC) ----
-            AddEnemyModel(dummyGo, dummy);
+            AddEnemyModel(dummyGo, dummy, dummyHit);
 
             // ---- Save and register ----
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -203,7 +203,10 @@ namespace RingFighter.EditorTools
 
         // Puts the Enemy01 character inside the dummy instead of the capsule shapes, with its material, animations
         // and the driver that plays them. Without the art files this does nothing and the capsule dummy stays.
-        private static void AddEnemyModel(GameObject dummyGo, TrainingDummy dummy)
+        /// <summary>Enemy height in meters. 0 keeps the model's own size (Enemy01 is about 2.2 m).</summary>
+        public static float EnemyHeight = 0f;
+
+        private static void AddEnemyModel(GameObject dummyGo, TrainingDummy dummy, CapsuleCollider hitCollider)
         {
             EnemyArtSetup.Result art = EnemyArtSetup.Prepare();
             if (art == null || art.model == null) return;
@@ -222,7 +225,7 @@ namespace RingFighter.EditorTools
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             }
 
-            // The art should already be about 1.9 m tall; correct it if the import came out at a different size.
+            // Keep the model's own size unless EnemyHeight asks for another, or the import came out absurdly sized.
             Bounds b = new Bounds();
             bool any = false;
             foreach (Renderer r in model.GetComponentsInChildren<Renderer>(true))
@@ -230,11 +233,15 @@ namespace RingFighter.EditorTools
                 if (!any) { b = r.bounds; any = true; }
                 else b.Encapsulate(r.bounds);
             }
-            if (any && b.size.y > 0.3f && Mathf.Abs(b.size.y - 1.9f) > 0.25f)
+            float height = any ? b.size.y : 2.2f;
+            float wanted = EnemyHeight > 0f ? EnemyHeight : (height < 1.2f || height > 3.5f ? 2.2f : height);
+            if (height > 0.3f && Mathf.Abs(height - wanted) > 0.02f)
             {
-                Debug.Log("RingFighter enemy: model was " + b.size.y.ToString("0.00") + " m tall, scaling to 1.9 m.");
-                model.transform.localScale *= 1.9f / b.size.y;
+                Debug.Log("RingFighter enemy: model was " + height.ToString("0.00") + " m tall, scaling to " + wanted.ToString("0.00") + " m.");
+                model.transform.localScale *= wanted / height;
             }
+            else Debug.Log("RingFighter enemy: model is " + height.ToString("0.00") + " m tall (kept).");
+            height = wanted;
 
             Animator anim = model.GetComponent<Animator>();
             if (anim == null) anim = model.AddComponent<Animator>();
@@ -246,8 +253,13 @@ namespace RingFighter.EditorTools
             dummy.visualsRoot = model;
             dummy.animatedModel = true;
             dummy.normalTint = Color.white;
-            dummy.headMinHeight = 1.6f;    // head of a 1.9 m character
-            dummy.hitHeight = 1.95f;
+            // Hit areas follow his height.
+            dummy.headMinHeight = height * 0.85f;     // neck and up
+            dummy.hitHeight = height + 0.05f;
+            dummy.chestHeight = height * 0.68f;
+            dummy.healthBarHeight = height + 0.3f;
+            hitCollider.height = height;
+            hitCollider.center = new Vector3(0f, height * 0.5f, 0f);
             dummy.getUpTime = art.getUpSeconds;
 
             EnemyAnimationDriver driver = dummyGo.AddComponent<EnemyAnimationDriver>();

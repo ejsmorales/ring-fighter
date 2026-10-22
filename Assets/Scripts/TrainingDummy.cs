@@ -77,6 +77,10 @@ namespace RingFighter
         public float hitRadius = 0.35f;
         [Tooltip("Height (meters) of the invisible capsule that attacks test against.")]
         public float hitHeight = 2.15f;
+        [Tooltip("Chest height (meters): where aim assist steers shots and reflected bolts fly.")]
+        public float chestHeight = 1.25f;
+        [Tooltip("Height (meters) of the floating health bar.")]
+        public float healthBarHeight = 2.45f;
 
         public bool IsAlive { get; private set; }
         /// <summary>True during the yellow/orange charge-up glow (read by the animation driver).</summary>
@@ -146,7 +150,7 @@ namespace RingFighter
             // Chest-height point that aim assist steers shots toward.
             aimPoint = new GameObject("Aim Point").transform;
             aimPoint.SetParent(transform, false);
-            aimPoint.localPosition = new Vector3(0f, 1.25f, 0f);
+            aimPoint.localPosition = new Vector3(0f, chestHeight, 0f);
             AimAssist.Register(aimPoint, this);
 
             Revive();
@@ -208,7 +212,7 @@ namespace RingFighter
 
             GameObject barRoot = new GameObject("Health Bar");
             barRoot.transform.SetParent(transform, false);
-            barRoot.transform.localPosition = new Vector3(0f, 2.45f, 0f);
+            barRoot.transform.localPosition = new Vector3(0f, healthBarHeight, 0f);
             bar = barRoot.transform;
             Fx.Shape(PrimitiveType.Cube, healthBarBackMaterial, new Vector3(0.62f, 0.07f, 0.02f), bar);
             GameObject fill = Fx.Shape(PrimitiveType.Cube, healthBarMaterial, new Vector3(0.6f, 0.05f, 0.02f), bar);
@@ -269,7 +273,7 @@ namespace RingFighter
         /// <summary>Chest-height point on the dummy (where reflected bolts fly).</summary>
         public Vector3 ChestPoint
         {
-            get { return aimPoint != null ? aimPoint.position : transform.position + Vector3.up * 1.25f; }
+            get { return aimPoint != null ? aimPoint.position : transform.position + Vector3.up * chestHeight; }
         }
 
         /// <summary>Back to full health and a fresh attack timer (the fight restarts after the player is knocked out).</summary>

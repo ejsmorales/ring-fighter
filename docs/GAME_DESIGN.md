@@ -212,3 +212,7 @@ Record each headset session here: date, build, what worked, what didn't.
   dummy state, flinch rate-limited for the laser, get-up at 2x speed during which he holds still and holds fire.
   Fixed on the way: the dummy fired instantly after respawning (stale attack timer). Untested.
 
+- **2026-10-21 (evening) — Enemy01 build passed: "ran as expected and looked fine", but too short.** The setup had
+  scaled the 2.19 m model down to 1.9 m (from the art notes). Now keeps the model's own height
+  (`RingFighterSceneBuilder.EnemyHeight` overrides it), and hit areas follow his height. Untested.
+

@@ -216,3 +216,9 @@ Record each headset session here: date, build, what worked, what didn't.
   scaled the 2.19 m model down to 1.9 m (from the art notes). Now keeps the model's own height
   (`RingFighterSceneBuilder.EnemyHeight` overrides it), and hit areas follow his height. Untested.
 
+- **2026-10-21 (night) — full-height Enemy01 passed ("ran well").** Notes: he slides side to side (no walk/strafe
+  clips exist); the green Player Platform disc read as an "aura" left behind once you move. **Changes:** platform
+  removed. Optional `strafe_left/right` and `walk_forward/back` clips are picked up automatically and blended by his
+  movement (MoveX/MoveZ). The clips still have to be made in the art conversation (Meshy, or Mixamo if Meshy has no
+  strafes). Untested.
+

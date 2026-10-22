@@ -87,7 +87,7 @@ namespace RingFighter.EditorTools
 
             // Floor and the spot where the player stands.
             Prim(PrimitiveType.Plane, "Floor", null, Vector3.zero, new Vector3(3f, 1f, 3f), floorMat, true);
-            Prim(PrimitiveType.Cylinder, "Player Platform", null, new Vector3(0f, 0.005f, 0f), new Vector3(1.4f, 0.005f, 1.4f), platformMat, false);
+            // (The green "Player Platform" disc was removed 2026-10-21: with stick movement it just stayed behind.)
 
             // ---- Player rig ----
             GameObject rigGo = new GameObject("Ring Rig");

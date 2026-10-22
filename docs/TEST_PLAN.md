@@ -8,20 +8,22 @@ Before testing: press **Y** (left controller) to show the debug panel. Its "Rece
 something didn't. The top lines show the ring hand, focus distance and the physics self-test.
 (Everything in this build is untested: built in the cloud, not yet run on the headset.)
 
-## This build — Enemy01 at full height (2026-10-21)
+## This build — platform removed, ready for walk/strafe clips (2026-10-21)
 
-Last build: the character worked and looked fine but was too short. The model is about 2.19 m tall; the setup had
-shrunk it to 1.9 m. It now keeps its own size, and the hit capsule, head zone, chest aim point and health bar follow
-his height. Untested.
+Last build: Enemy01 at full height passed. Notes: (1) he slides sideways with no walk/strafe animation (there are no
+such clips yet); (2) a green "aura" at the spawn spot stays behind when you move: that was the Player Platform disc.
+Changes: the platform is gone. The game now supports optional in-place clips `Enemy01@strafe_left`, `strafe_right`,
+`walk_forward`, `walk_back` in `Assets/Art/Enemy/Animations`; when present, he blends between them by how he is
+moving. Until those files exist nothing changes for him (still slides). Untested.
 
 | # | Do this | Expected | Panel shows |
 | --- | --- | --- | --- |
-| T1 | Look at him | About 2.2 m tall, clearly taller than you. Feet on the floor, health bar just above his head | — |
-| T2 | Shoot his head | Headshot (orange "!" number) when hitting from the neck up | `HEADSHOT on the dummy` |
-| T3 | Shoot his chest and legs | Normal hits; nothing passes through his visible body, and shots above his head miss | `HIT ...` |
-| T4 | Aim assist | Shots that are nearly on target curve toward his chest, not his belly | — |
-| T5 | Double-shield reflect | Reflected bolt flies back at his chest | `Reflected bolt HIT` |
-| T6 | Is this the right height now? | If you want him taller still, tell Claude a number (e.g. 2.5 m) | Report |
+| T1 | Start the game, look down | No green disc under you | — |
+| T2 | Everything else about him | Same as last build (he still slides until the walk/strafe clips are added) | — |
+| **After the new clips are added** | | | |
+| T3 | Watch him wander side to side | Strafe steps in the direction he moves, idle when he slows at the ends of his path | — |
+| T4 | Watch his feet | Feet roughly match the ground speed (no moonwalking/ice skating). If too fast or slow, tell Claude ("Full Move Speed" on the driver) | — |
+| T5 | Whirlwind lift, knock-out, get up, shooting | All still play correctly over the walking | — |
 
 ## Regression (every build)
 

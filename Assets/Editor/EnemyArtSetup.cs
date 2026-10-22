@@ -26,7 +26,18 @@ namespace RingFighter.EditorTools
         private const string TextureFolder = Folder + "/Textures";
         private const string Marker = "RingFighter enemy import v1";
 
-        private static readonly string[] ClipNames = { "idle", "charge_shoot", "hit_react", "lifted_falling", "knocked_out", "get_up" };
+        private static readonly string[] ClipNames = { "idle", "charge_shoot", "hit_react", "lifted_falling", "knocked_out", "get_up",
+                                                       "strafe_left", "strafe_right", "walk_forward", "walk_back" };
+
+        // Optional in-place movement clips. If any exist, idle becomes a "Locomotion" blend between them, driven by
+        // the MoveX (sideways) and MoveZ (toward/away from the player) parameters, so he walks instead of sliding.
+        private static readonly string[] MoveClips = { "strafe_left", "strafe_right", "walk_forward", "walk_back" };
+        private static readonly Vector2[] MoveDirections = { new Vector2(-1f, 0f), new Vector2(1f, 0f), new Vector2(0f, 1f), new Vector2(0f, -1f) };
+
+        private static bool Loops(string clip)
+        {
+            return clip == "idle" || clip == "charge_shoot" || System.Array.IndexOf(MoveClips, clip) >= 0;
+        }
 
         /// <summary>Playback speed of the get-up animation (the clip is 8.3 s long).</summary>
         public const float GetUpSpeed = 2f;
@@ -56,7 +67,7 @@ namespace RingFighter.EditorTools
             ConfigureModel(ModelPath, false, false, false);
             foreach (string n in ClipNames)
                 if (AssetImporter.GetAtPath(ClipPath(n)) != null)
-                    ConfigureModel(ClipPath(n), true, n == "idle" || n == "charge_shoot", n == "lifted_falling");
+                    ConfigureModel(ClipPath(n), true, Loops(n), n == "lifted_falling");
 
             ConfigureTexture(TextureFolder + "/Enemy01_BaseColor.png", false, false);
             ConfigureTexture(TextureFolder + "/Enemy01_Normal.png", true, true);
@@ -74,7 +85,7 @@ namespace RingFighter.EditorTools
                 AnimationClip c = AssetDatabase.LoadAllAssetsAtPath(ClipPath(n)).OfType<AnimationClip>()
                     .FirstOrDefault(x => !x.name.StartsWith("__preview__"));
                 if (c != null) clips[n] = c;
-                else Debug.LogWarning("RingFighter enemy: no animation clip found in " + ClipPath(n));
+                else if (System.Array.IndexOf(MoveClips, n) < 0) Debug.LogWarning("RingFighter enemy: no animation clip found in " + ClipPath(n));
             }
 
             r.material = BuildMaterial();
@@ -175,8 +186,10 @@ namespace RingFighter.EditorTools
         private static RuntimeAnimatorController BuildController(Dictionary<string, AnimationClip> clips)
         {
             AnimatorController existing = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
-            if (existing != null && existing.layers.Length > 0 && existing.layers[0].stateMachine.states.Length >= 6)
-                return existing;   // already built: keep it (and its GUID) as is
+            bool wantMove = MoveClips.Any(c => clips.ContainsKey(c));
+            bool hasMove = existing != null && existing.parameters.Any(p => p.name == "MoveX");
+            if (existing != null && existing.layers.Length > 0 && existing.layers[0].stateMachine.states.Length >= 6 && hasMove == wantMove)
+                return existing;   // already built for this set of clips: keep it (and its GUID) as is
             if (existing != null) AssetDatabase.DeleteAsset(ControllerPath);
 
             AnimatorController ac = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
@@ -184,13 +197,18 @@ namespace RingFighter.EditorTools
             ac.AddParameter("Airborne", AnimatorControllerParameterType.Bool);
             ac.AddParameter("Charging", AnimatorControllerParameterType.Bool);
             ac.AddParameter("Hit", AnimatorControllerParameterType.Trigger);
+            if (wantMove)
+            {
+                ac.AddParameter("MoveX", AnimatorControllerParameterType.Float);
+                ac.AddParameter("MoveZ", AnimatorControllerParameterType.Float);
+            }
             AnimatorControllerParameter[] ps = ac.parameters;
             for (int i = 0; i < ps.Length; i++)
                 if (ps[i].name == "Alive") ps[i].defaultBool = true;
             ac.parameters = ps;
 
             AnimatorStateMachine sm = ac.layers[0].stateMachine;
-            AnimatorState idle = State(sm, "Idle", clips, "idle", 1f);
+            AnimatorState idle = wantMove ? Locomotion(ac, sm, clips) : State(sm, "Idle", clips, "idle", 1f);
             AnimatorState charge = State(sm, "Charge", clips, "charge_shoot", 1f);
             AnimatorState hit = State(sm, "Hit", clips, "hit_react", 1f);
             AnimatorState lifted = State(sm, "Lifted", clips, "lifted_falling", 1f);
@@ -243,6 +261,27 @@ namespace RingFighter.EditorTools
 
             EditorUtility.SetDirty(ac);
             return ac;
+        }
+
+        // Idle in the middle, a movement clip in each direction; Unity blends between them by MoveX / MoveZ.
+        private static AnimatorState Locomotion(AnimatorController ac, AnimatorStateMachine sm, Dictionary<string, AnimationClip> clips)
+        {
+            BlendTree tree = new BlendTree();
+            tree.name = "Locomotion";
+            tree.blendType = BlendTreeType.SimpleDirectional2D;
+            tree.blendParameter = "MoveX";
+            tree.blendParameterY = "MoveZ";
+            tree.hideFlags = HideFlags.HideInHierarchy;
+            AssetDatabase.AddObjectToAsset(tree, ac);
+
+            AnimationClip c;
+            if (clips.TryGetValue("idle", out c)) tree.AddChild(c, Vector2.zero);
+            for (int i = 0; i < MoveClips.Length; i++)
+                if (clips.TryGetValue(MoveClips[i], out c)) tree.AddChild(c, MoveDirections[i]);
+
+            AnimatorState s = sm.AddState("Locomotion");
+            s.motion = tree;
+            return s;
         }
 
         private static AnimatorState State(AnimatorStateMachine sm, string name, Dictionary<string, AnimationClip> clips, string clip, float speed)

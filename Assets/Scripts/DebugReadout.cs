@@ -19,6 +19,7 @@ namespace RingFighter
         private LaserMove laser;
         private ShieldMove shield;
         private PlayerMovement movement;
+        private EnemyBrain brain;
         private Text text;
         private GameObject panel;
         private float nextRefresh;
@@ -33,6 +34,7 @@ namespace RingFighter
             laser = ctx.controller.GetComponent<LaserMove>();
             shield = ctx.controller.GetComponent<ShieldMove>();
             movement = FindAnyObjectByType<PlayerMovement>();
+            brain = FindAnyObjectByType<EnemyBrain>();
             Build();
         }
 
@@ -114,6 +116,7 @@ namespace RingFighter
             if (!string.IsNullOrEmpty(MoveLog.Status)) sb.Append(MoveLog.Status).Append('\n');
             if (ctx.Right != null)
                 sb.Append("Aim tilt ").Append(Mathf.RoundToInt(ctx.Right.aimPitchOffset)).Append("  (A = more, B = less)\n");
+            if (brain != null) sb.Append("Enemy: ").Append(brain.State).Append('\n');
             if (movement != null) sb.Append("Move: ").Append(movement.StatusText()).Append('\n');
             sb.Append("Energy ").Append(Mathf.RoundToInt(ctx.energy.Current)).Append(" / ").Append(Mathf.RoundToInt(ctx.energy.max)).Append('\n');
 

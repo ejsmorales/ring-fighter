@@ -222,3 +222,14 @@ Record each headset session here: date, build, what worked, what didn't.
   movement (MoveX/MoveZ). The clips still have to be made in the art conversation (Meshy, or Mixamo if Meshy has no
   strafes). Untested.
 
+- **2026-11-04 — enemy AI (branch `claude/enemy-ai`, from `claude/enemy-model`).** Owner: "add some AI or logic so
+  he moves around and tries to outsmart you, maybe a special that makes him teleport and shoot."
+  - **Decisions (grill):** *duelist* movement (keeps ~5.5 m, circles you, random direction changes and pauses);
+    smarts: **dodges your shots** (40%, sidestep 1.3 m) and **punishes openings** (shoots sooner when your energy is
+    under 20% or right after your blast/laser/whirlwind); leading shots and shield-reading were not picked.
+    **Teleport special:** blink to your flank (60-90 degrees left/right, never behind) after a 0.6 s flicker + rising
+    sound, then a quick 11 m/s bolt; on a 12-20 s timer and also to escape when you charge a blast or deal 35+
+    damage in 2 s (never more than once per 6 s). **One tuned difficulty** for now; difficulty settings later.
+  - Structure: `EnemyBrain` decides, `TrainingDummy` stays the body. All values are public fields. Untested.
+  - Still open: walk/strafe clips (he slides while moving, more visible now that he moves on purpose).
+

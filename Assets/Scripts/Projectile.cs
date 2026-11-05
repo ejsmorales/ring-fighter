@@ -15,6 +15,9 @@ namespace RingFighter
 
         private float age;
 
+        /// <summary>Raised whenever the player fires a projectile (bolt or blast). EnemyBrain uses it to dodge.</summary>
+        public static event System.Action<Projectile> Spawned;
+
         public static Projectile Spawn(Material material, Vector3 position, Vector3 direction, float speed, float damage, float radius, float knockback, bool blast = false)
         {
             GameObject go = Fx.Shape(PrimitiveType.Sphere, material, Vector3.one * radius * 2f);
@@ -28,6 +31,7 @@ namespace RingFighter
             p.knockback = knockback;
             p.isBlast = blast;
             go.AddComponent<ProjectileVfx>();   // visuals only; harmless if the effects are unavailable
+            if (Spawned != null) Spawned(p);
             return p;
         }
 

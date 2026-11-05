@@ -187,6 +187,11 @@ namespace RingFighter.EditorTools
             vfxLibrary.shield = fxShield;
             vfxGo.AddComponent<VfxSystem>();
 
+            // ---- Enemy brain: duelist movement, dodging, punishing, flank teleport ----
+            dummy.brainControlled = true;
+            dummyGo.AddComponent<EnemyBrain>();
+            dummyGo.AddComponent<TeleportVfx>();
+
             // ---- Enemy character (if the art is in Assets/Art/Enemy on this PC) ----
             AddEnemyModel(dummyGo, dummy, dummyHit);
 

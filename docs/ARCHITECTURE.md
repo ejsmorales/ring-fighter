@@ -45,6 +45,8 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 | `PlayerHealth.cs` | Player health, head and torso hit spheres, hit flash, knock-out and fight restart. `PlayerHealth.Instance`. |
 | `EnemyBolt.cs` | The dummy's yellow bolt (also: clashes with your projectiles via `ClashWith`, laser cuts via `CutAlong`): hits the player, is absorbed by a single shield (`ShieldMove.AbsorbHit`) or reflected by a double shield (`ShieldMove.Intercept` is the plane-crossing test). |
 | `PlayerMovement.cs` | Off-hand thumbstick movement: Dash (default), Smooth, Off; click the stick to cycle. Moves the rig (player root), clamped to an arena circle. Independent of the move system. |
+| `EnemyBrain.cs` | The opponent's decision making ("duelist"): keeps range and circles, dodges `Projectile.Spawned` shots, punishes openings (`TrainingDummy.HurryNextShot`), teleports to your flank (`TrainingDummy.BeginTeleport`). Sets `TrainingDummy.DesiredVelocity`; the dummy body does the moving, shooting and animation. |
+| `VFX/TeleportVfx.cs` | Teleport warning sparks and 3D sounds (reads `TrainingDummy.TeleportStarted` / `Teleported`). |
 | `EnemyAnimationDriver.cs` | Plays the enemy model's Animator from TrainingDummy state (Alive, Airborne, Charging bools; Hit trigger on `Damaged`) and points the dummy's muzzle at the right hand bone. Reads only. |
 | `Editor/EnemyArtSetup.cs` | Build-time setup of `Assets/Art/Enemy`: humanoid import settings, URP Lit material, Animator controller. Called by the scene builder; no-op (capsule dummy) if the art isn't on the PC. |
 | `PauseControl.cs` | Left menu button toggles pause (`Time.timeScale` 0, floating "PAUSED" sign). `PauseControl.IsPaused` stops ring moves in `RingController`. |

@@ -49,6 +49,22 @@ namespace RingFighter
         [Tooltip("...for this many seconds after the last touch.")]
         public float slowDuration = 6f;
 
+        [Header("Brain (EnemyBrain)")]
+        [Tooltip("Ticked when an EnemyBrain moves this dummy. Unticked, it wanders back and forth on its own (the old behavior).")]
+        public bool brainControlled;
+        [Tooltip("The dummy never goes further than this from the middle of the arena (meters).")]
+        public float arenaRadius = 10f;
+
+        [Header("Teleport (started by EnemyBrain)")]
+        [Tooltip("Seconds he flickers in place (the warning) before he vanishes.")]
+        public float teleportShimmerTime = 0.6f;
+        [Tooltip("Seconds he is invisible between the two spots.")]
+        public float teleportGapTime = 0.15f;
+        [Tooltip("Seconds of charge-up glow for the quick shot right after he reappears.")]
+        public float teleportShotCharge = 0.35f;
+        [Tooltip("Speed (m/s) of that quick shot.")]
+        public float teleportBoltSpeed = 11f;
+
         [Header("Movement")]
         public Vector3 wanderExtents = new Vector3(2.2f, 0f, 0.8f);
         public float wanderSpeed = 0.55f;
@@ -91,6 +107,20 @@ namespace RingFighter
         public bool IsGettingUp { get { return Time.time < getUpUntil; } }
         /// <summary>Raised whenever a hit is shown (damage number). The animation driver plays a flinch.</summary>
         public event System.Action Damaged;
+        /// <summary>Raised on every bit of damage with the amount (EnemyBrain uses it to decide to escape).</summary>
+        public event System.Action<float> DamageTaken;
+        /// <summary>Raised when the teleport warning starts (position he is leaving).</summary>
+        public event System.Action<Vector3> TeleportStarted;
+        /// <summary>Raised the moment he jumps (from, to).</summary>
+        public event System.Action<Vector3, Vector3> Teleported;
+
+        /// <summary>Velocity (m/s, flat) the brain wants him to move at. Used when brainControlled is ticked.</summary>
+        public Vector3 DesiredVelocity { get; set; }
+        /// <summary>Where he stands on the floor (without knockback or whirlwind height).</summary>
+        public Vector3 GroundPosition { get { return groundPos; } }
+        public bool IsTeleporting { get { return teleport != Teleport.None; } }
+        /// <summary>True when he is free to move, dodge, shoot or teleport.</summary>
+        public bool CanAct { get { return IsAlive && air == Air.Grounded && !IsGettingUp && teleport == Teleport.None; } }
 
         public float Health { get; private set; }
 
@@ -126,6 +156,14 @@ namespace RingFighter
         private float slowedUntil = -1f;
         private float getUpUntil = -1f;
         private float wanderClock;
+        private Vector3 groundPos;
+
+        private enum Teleport { None, Shimmer, Gone }
+        private Teleport teleport = Teleport.None;
+        private float teleportUntil;
+        private Vector3 teleportTo;
+        private bool quickShot;
+        private float activeChargeTime;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -133,6 +171,8 @@ namespace RingFighter
         private void Awake()
         {
             home = transform.position;
+            groundPos = home;
+            activeChargeTime = chargeTime;
             wanderPhase = Random.value * 10f;
             block = new MaterialPropertyBlock();
             BuildVisuals();
@@ -223,7 +263,7 @@ namespace RingFighter
         /// <summary>The whirlwind is touching the dummy: slows its attacks and, after a moment, lifts it.</summary>
         public void OnWhirlwind(float deltaTime)
         {
-            if (!IsAlive) return;
+            if (!IsAlive || IsTeleporting) return;
             slowedUntil = Time.time + slowDuration;
             windSeen = Time.time;
             if (air != Air.Grounded || Time.time < liftReadyTime) return;
@@ -279,7 +319,83 @@ namespace RingFighter
         /// <summary>Back to full health and a fresh attack timer (the fight restarts after the player is knocked out).</summary>
         public void ResetFight()
         {
+            groundPos = home;   // back to his starting spot
             Revive();
+        }
+
+        // ---- Hooks for EnemyBrain ----
+
+        /// <summary>Bring the next shot forward so it starts charging after 'extraDelay' seconds. False if it can't (already charging, busy...).</summary>
+        public bool HurryNextShot(float extraDelay)
+        {
+            if (!wasFighting || charging || !CanAct) return false;
+            float soonest = Time.time + activeChargeTime + extraDelay;
+            if (nextFireTime <= soonest) return false;
+            nextFireTime = soonest;
+            return true;
+        }
+
+        /// <summary>Start the teleport: flicker in place, vanish, reappear at 'destination', then a quick shot.</summary>
+        public bool BeginTeleport(Vector3 destination)
+        {
+            if (!CanAct) return false;
+            teleport = Teleport.Shimmer;
+            teleportUntil = Time.time + teleportShimmerTime;
+            destination.y = home.y;
+            teleportTo = destination;
+            charging = false;
+            HideOrb();
+            if (TeleportStarted != null) TeleportStarted(transform.position);
+            return true;
+        }
+
+        private void UpdateTeleport()
+        {
+            if (teleport == Teleport.Shimmer)
+            {
+                SetModelVisible(Mathf.Repeat(Time.time * 16f, 1f) > 0.35f);   // flicker = the warning
+                if (Time.time >= teleportUntil)
+                {
+                    teleport = Teleport.Gone;
+                    teleportUntil = Time.time + teleportGapTime;
+                    SetModelVisible(false);
+                    Vector3 from = transform.position;
+                    groundPos = teleportTo;
+                    knockOffset = Vector3.zero;
+                    if (Teleported != null) Teleported(from, teleportTo);
+                }
+            }
+            else if (teleport == Teleport.Gone && Time.time >= teleportUntil)
+            {
+                teleport = Teleport.None;
+                SetModelVisible(true);
+                if (lookTarget != null)
+                {
+                    Vector3 toPlayer = lookTarget.position - groundPos;
+                    toPlayer.y = 0f;
+                    if (toPlayer.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(toPlayer);
+                }
+                // Quick shot from the new spot.
+                wasFighting = true;
+                quickShot = true;
+                activeChargeTime = teleportShotCharge;
+                nextFireTime = Time.time + teleportShotCharge;
+            }
+        }
+
+        private void CancelTeleport()
+        {
+            teleport = Teleport.None;
+            quickShot = false;
+            activeChargeTime = chargeTime;
+            SetModelVisible(true);
+        }
+
+        private void SetModelVisible(bool on)
+        {
+            if (renderers == null) return;
+            for (int i = 0; i < renderers.Length; i++)
+                if (renderers[i] != null) renderers[i].enabled = on;
         }
 
         private void Revive()
@@ -288,6 +404,7 @@ namespace RingFighter
             getUpUntil = wasDown ? Time.time + getUpTime : -1f;
             wasFighting = false;   // fresh attack timer (it used to fire instantly after respawning)
             charging = false;
+            CancelTeleport();
             IsAlive = true;
             air = Air.Grounded;
             airHeight = 0f;
@@ -318,6 +435,7 @@ namespace RingFighter
             // Direct hits to the head do extra.
             bool headshot = kind == DamageKind.Direct && point.y - transform.position.y >= headMinHeight;
             if (headshot) amount *= headshotMultiplier;
+            if (DamageTaken != null) DamageTaken(amount);
 
             Health = Mathf.Max(0f, Health - amount);
             flashTimer = 0.12f;
@@ -350,6 +468,7 @@ namespace RingFighter
         {
             IsAlive = false;
             deathTime = Time.time;
+            CancelTeleport();
             transform.position -= Vector3.up * airHeight;   // knocked out mid-air: drop to the floor
             air = Air.Grounded;
             airHeight = 0f;
@@ -380,12 +499,32 @@ namespace RingFighter
 
         private void UpdateAlive()
         {
-            if (!IsGettingUp) wanderClock += Time.deltaTime;   // stands still while getting up
-            float t = wanderClock * wanderSpeed + wanderPhase;
-            Vector3 wander = new Vector3(Mathf.Sin(t) * wanderExtents.x, 0f, Mathf.Sin(t * 0.63f + 1.3f) * wanderExtents.z);
+            UpdateTeleport();
+            Vector3 basePos;
+            if (brainControlled)
+            {
+                // The brain decides where to go; he holds still while getting up, flying or teleporting.
+                Vector3 v = CanAct ? DesiredVelocity : Vector3.zero;
+                v.y = 0f;
+                groundPos += v * Time.deltaTime;
+                Vector2 flat = new Vector2(groundPos.x, groundPos.z);
+                if (flat.magnitude > arenaRadius)
+                {
+                    flat = flat.normalized * arenaRadius;
+                    groundPos.x = flat.x;
+                    groundPos.z = flat.y;
+                }
+                basePos = groundPos;
+            }
+            else
+            {
+                if (!IsGettingUp) wanderClock += Time.deltaTime;   // stands still while getting up
+                float t = wanderClock * wanderSpeed + wanderPhase;
+                basePos = home + new Vector3(Mathf.Sin(t) * wanderExtents.x, 0f, Mathf.Sin(t * 0.63f + 1.3f) * wanderExtents.z);
+            }
             knockOffset = Vector3.Lerp(knockOffset, Vector3.zero, 3f * Time.deltaTime);
             UpdateAir();
-            transform.position = home + wander + knockOffset + Vector3.up * airHeight;
+            transform.position = basePos + knockOffset + Vector3.up * airHeight;
 
             if (lookTarget != null)
             {
@@ -419,6 +558,14 @@ namespace RingFighter
                 return;
             }
 
+            // Teleporting: the timer waits; the quick shot is set up when he reappears.
+            if (IsTeleporting)
+            {
+                charging = false;
+                HideOrb();
+                return;
+            }
+
             // Getting up after a knock-out: no shooting yet.
             if (IsGettingUp)
             {
@@ -446,18 +593,20 @@ namespace RingFighter
                 Vector3 target = atHead ? player.HeadPoint : player.ChestPoint;
                 Vector3 dir = target - muzzle;
                 if (dir.sqrMagnitude < 0.01f) dir = transform.forward;
-                EnemyBolt.Spawn(GetAttackMaterial(), muzzle, dir.normalized, boltSpeed, boltDamage, this, atHead);
-                MoveLog.Add(atHead ? "Dummy fires (AT YOUR HEAD)" : "Dummy fires");
+                EnemyBolt.Spawn(GetAttackMaterial(), muzzle, dir.normalized, quickShot ? teleportBoltSpeed : boltSpeed, boltDamage, this, atHead);
+                MoveLog.Add((quickShot ? "Dummy quick-fires after teleporting" : "Dummy fires") + (atHead ? " (AT YOUR HEAD)" : ""));
+                quickShot = false;
+                activeChargeTime = chargeTime;
                 nextFireTime = Time.time + attackInterval * (Slowed ? slowedIntervalMultiplier : 1f);
             }
-            else if (untilFire <= chargeTime)
+            else if (untilFire <= activeChargeTime)
             {
                 if (!charging)
                 {
                     charging = true;
                     chargeAimsHead = Random.value < headShotChance;   // decided when the glow starts, shown by its color
                 }
-                float t = 1f - untilFire / Mathf.Max(0.01f, chargeTime);
+                float t = 1f - untilFire / Mathf.Max(0.01f, activeChargeTime);
                 ShowOrb(muzzle, t);
             }
             else

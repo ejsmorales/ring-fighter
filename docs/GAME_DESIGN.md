@@ -259,3 +259,8 @@ Record each headset session here: date, build, what worked, what didn't.
   counts as an opening for the enemy); a *gentle* whirlwind pull within 3 m (0.6-1.2 m/s, he can walk out).
   Untested.
 
+- **2026-11-06 — recharge/pull build.** The recharge stance never triggered (owner unsure of the motion); the enemy
+  seemed to become immune after several hits (owner: fine, but show an indicator). No immunity exists in code
+  (only while knocked out); likely dodges, escape teleports or bolt clashes. **Changes (untested):** recharge start
+  height lowered to forehead level, debug panel `Recharge:` status line and a hint log, floating DODGE label.
+

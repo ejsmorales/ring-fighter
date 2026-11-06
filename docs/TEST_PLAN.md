@@ -8,25 +8,27 @@ Before testing: press **Y** (left controller) to show the debug panel. Its "Rece
 something didn't. The top lines show the ring hand, focus distance and the physics self-test.
 (Everything in this build is untested: built in the cloud, not yet run on the headset.)
 
-## This build — recharge stance + whirlwind pull (2026-11-05, third build)
+## This build — recharge made easier to trigger and see; DODGE label (2026-11-06)
 
-Last build: "much smoother and manageable". But with him moving you miss more and run low on energy, and the
-whirlwind is hard to use. New: a **recharge stance** (squeeze BOTH grips and raise the ring hand above your head:
-+35 energy/s, but no attacks, slow walk, and he sees it as an opening); the **whirlwind gently pulls** him toward it
-when it passes within 3 m (0.6 m/s at 3 m up to 1.2 m/s close in; he can still walk out). Untested.
+Last build: the recharge stance never triggered; the enemy seemed to become "immune" after several hits. There is
+no immunity in the code: hits only stop counting while he is knocked out. Likely causes of "immune": he sidesteps
+(40% of shots aimed at him), he escape-teleports after 35+ damage in 2 s, or your bolt collides with his incoming
+bolt and both cancel (dark burst). Changes: recharge starts with the ring hand at forehead height or higher (was
+5 cm above the head) and stays on down to 25 cm below head height; a `Recharge:` line on the debug panel shows
+both grip pressures and the ring hand's height, and a hint appears if the grips are held but the hand is too low;
+a floating **DODGE** appears over him when he sidesteps. Untested.
+
+**The recharge motion:** squeeze and hold the **grip** buttons (the side buttons under your middle fingers) on
+**both** controllers, then raise the ring hand straight up over your head, like holding the ring to the sky. The
+off hand can stay anywhere.
 
 | # | Do this | Expected | Panel shows |
 | --- | --- | --- | --- |
-| T1 | Spend energy, then squeeze both grips and raise the ring hand above your head | Green glow and a column of light at your ring, soft pulses in the ring hand, energy bar fills fast (empty to full in about 3 s) | `Recharging` |
-| T2 | Lower the ring hand (or let go of a grip) | Stance ends, glow fades | `Recharge ended: ring hand lowered (energy NN)` |
-| T3 | Hold the stance at full energy | Pulses stop; nothing else happens | — |
-| T4 | Try to fire, shield or whirlwind while in the stance | Nothing fires (both hands are busy) | — |
-| T5 | Move with the off-hand stick while in the stance | Slow walk (about a third of normal speed), no dash | — |
-| T6 | Recharge while he's attacking | His next shot comes sooner (he punishes it) | `Dummy punishes an opening (you're recharging)` |
-| T7 | Grips held but ring hand at chest height | No recharge (the ring must be above your head) | — |
-| T8 | Send a whirlwind past him, about 2-3 m away | He's dragged toward the vortex; if it reaches him he's lifted as before | `Whirlwind caught the dummy` |
-| T9 | Whirlwind near him while he walks away | He drifts toward it but can still escape if moving directly away | — |
-| T10 | Feel: is the stance comfortable and worth the risk? Is the pull enough now? | Report | — |
+| T1 | With the panel open, squeeze both grips (hands down) | `Recharge:` line shows both grips near 1.0 and the ring hand well below the head; a hint says to raise the ring hand | `Recharge: grips OK, raise the ring hand above your head` |
+| T2 | Keep squeezing, raise the ring hand overhead | Charging starts: green glow and column at the ring, energy fills fast | `Recharging`, `CHARGING` on the Recharge line |
+| T3 | If T2 doesn't start | Read the Recharge line: which grip is under 0.7, or what height is shown, and tell Claude | Report the line |
+| T4 | Fire bolts at him until he sidesteps | Yellow DODGE word floats over him each time he dodges | `Dummy dodges` |
+| T5 | When he seems "immune" again, read the Recent list | Look for `Dummy dodges`, `Dummy teleports (escaping damage)`, or `Bolts cancelled`. Tell Claude which (or none) | Report |
 
 ## Regression (every build)
 

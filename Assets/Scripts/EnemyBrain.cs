@@ -196,7 +196,11 @@ namespace RingFighter
                 velocity = dodgeDir * (dodgeDistance / Mathf.Max(0.05f, dodgeTime));
                 dummy.DesiredVelocity = velocity;
                 State = "DODGING";
-                if (dodgeStartAt > 0f && Time.time - dodgeStartAt < Time.deltaTime * 1.5f) MoveLog.Add("Dummy dodges");
+                if (dodgeStartAt > 0f && Time.time - dodgeStartAt < Time.deltaTime * 1.5f)
+                {
+                    MoveLog.Add("Dummy dodges");
+                    Impact.Label(dummy.ChestPoint + Vector3.up * 0.6f, "DODGE", new Color(1f, 0.9f, 0.4f), dummy.lookTarget);
+                }
                 return;
             }
 

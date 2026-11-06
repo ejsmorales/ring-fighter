@@ -34,6 +34,22 @@ namespace RingFighter
             if (sound) PlayHit(point, amount);
         }
 
+        /// <summary>A floating word (like "DODGE") that rises and fades, facing the viewer.</summary>
+        public static void Label(Vector3 point, string text, Color color, Transform viewer, float size = 0.14f)
+        {
+            GameObject go = new GameObject("Floating Label");
+            go.transform.position = point;
+            TextMesh tm = go.AddComponent<TextMesh>();
+            tm.text = text;
+            Fx.SetupText(tm, size, color);
+            Impact i = go.AddComponent<Impact>();
+            i.kind = Kind.Number;
+            i.life = 0.9f;
+            i.viewer = viewer;
+            i.textMesh = tm;
+            i.baseColor = color;
+        }
+
         /// <summary>Just the burst and sound, no number (shield hits, player hits).</summary>
         public static void Spark(Vector3 point, Color color, float size = 0.25f, bool sound = true)
         {

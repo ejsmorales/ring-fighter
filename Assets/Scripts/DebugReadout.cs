@@ -20,6 +20,7 @@ namespace RingFighter
         private ShieldMove shield;
         private PlayerMovement movement;
         private EnemyBrain brain;
+        private RechargeMove recharge;
         private Text text;
         private GameObject panel;
         private float nextRefresh;
@@ -35,6 +36,7 @@ namespace RingFighter
             shield = ctx.controller.GetComponent<ShieldMove>();
             movement = FindAnyObjectByType<PlayerMovement>();
             brain = FindAnyObjectByType<EnemyBrain>();
+            recharge = ctx.controller.GetComponent<RechargeMove>();
             Build();
         }
 
@@ -118,6 +120,7 @@ namespace RingFighter
                 sb.Append("Aim tilt ").Append(Mathf.RoundToInt(ctx.Right.aimPitchOffset)).Append("  (A = more, B = less)\n");
             if (brain != null) sb.Append("Enemy: ").Append(brain.State).Append('\n');
             if (movement != null) sb.Append("Move: ").Append(movement.StatusText()).Append('\n');
+            if (recharge != null) sb.Append("Recharge: ").Append(recharge.StatusText()).Append('\n');
             sb.Append("Energy ").Append(Mathf.RoundToInt(ctx.energy.Current)).Append(" / ").Append(Mathf.RoundToInt(ctx.energy.max)).Append('\n');
 
             if (ctx.RingHand == null) sb.Append("Ring hand: not picked yet (pull a trigger)\n");

@@ -14,13 +14,23 @@ namespace RingFighter
         [Tooltip("How hard (0-1) both grips must be squeezed.")]
         [Range(0f, 1f)] public float gripThreshold = 0.7f;
         [Tooltip("To START, the ring hand must be at least this far (meters) above your head.")]
-        public float startAboveHead = 0.05f;
+        public float startAboveHead = -0.05f;
         [Tooltip("The stance ends if the ring hand drops more than this far (meters) below head height.")]
-        public float stayAboveHead = -0.15f;
+        public float stayAboveHead = -0.25f;
         [Tooltip("While in the stance you move at this fraction of your normal speed (dashing is off).")]
         [Range(0f, 1f)] public float moveSpeedFactor = 0.35f;
 
         private float nextBuzz;
+        private float nextHint;
+
+        /// <summary>One line for the debug panel: grip pressure and ring height, so it's clear what's missing.</summary>
+        public string StatusText()
+        {
+            if (ctx == null || ctx.RingHand == null || ctx.Left == null || ctx.Right == null || ctx.Head == null) return "pick ring hand first";
+            return "grips L " + ctx.Left.Grip.ToString("0.0") + " R " + ctx.Right.Grip.ToString("0.0")
+                   + ", ring " + RingHandHeight().ToString("+0.00;-0.00") + " m vs head"
+                   + (IsActive ? "  CHARGING" : "  (need both grips > " + gripThreshold.ToString("0.0") + ", ring > " + startAboveHead.ToString("+0.00;-0.00") + ")");
+        }
 
         private void Reset()
         {
@@ -42,7 +52,15 @@ namespace RingFighter
         {
             if (freeHands != BothMask || ctx.RingHand == null || ctx.Head == null) return false;
             if (!ctx.RingHand.IsTracked || !GripsHeld()) return false;
-            if (RingHandHeight() < startAboveHead) return false;
+            if (RingHandHeight() < startAboveHead)
+            {
+                if (Time.time >= nextHint)
+                {
+                    nextHint = Time.time + 3f;
+                    MoveLog.Add("Recharge: grips OK, raise the ring hand above your head");
+                }
+                return false;
+            }
 
             IsActive = true;
             UsedHands = BothMask;

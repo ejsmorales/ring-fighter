@@ -15,6 +15,8 @@ head). Smoother enemy animation: no keyframe compression, loop seams blended, lo
 flinch can no longer restart itself (flinch at most every 0.8 s), and the floor safeguard raises him gradually
 instead of in one jump. Untested.
 
+Also new: the walk/strafe clips are in (strafe_right is mirrored from strafe_left until a real one exists).
+
 This build re-imports the enemy art once (import settings changed) and rebuilds his Animator controller, so the first
 build takes a little longer and afterwards `git status` shows changed files under `Assets/Art/Enemy` (the `.meta`
 files and `Enemy01.controller`). **Commit those** (see the bottom of this section).
@@ -29,6 +31,9 @@ files and `Enemy01.controller`). **Commit those** (see the bottom of this sectio
 | T6 | Hit him repeatedly / hold the laser on him | He flinches smoothly, not a rapid restart stutter | — |
 | T7 | Watch for any remaining stutter | If you still see it, note **when** (idle? walking/sliding? turning to face you? after a teleport? when hit?) and tell Claude | Report |
 | T8 | Floor | Still never sinks; any `Enemy sank ... (State)` line -> tell Claude the state | `Enemy sank ...` |
+| T9 | Watch him move (the art conversation delivered strafe_left, walk_forward, walk_back; no strafe_right, so strafe_left is used mirrored) | He steps instead of sliding: strafing both left and right, walking forward/back when he closes in or backs off | — |
+| T10 | Watch his feet while he moves | Steps roughly match his speed (no ice skating). Too fast or slow? Tell Claude ("Full Move Speed") | Report |
+| T11 | Dodges and teleports | A dodge is a fast sidestep (may still look like a slide: it's quicker than any walk clip) | — |
 
 After testing, commit the re-imported art settings:
 ```

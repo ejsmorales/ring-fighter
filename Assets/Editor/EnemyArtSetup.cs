@@ -191,7 +191,8 @@ namespace RingFighter.EditorTools
             AnimatorController existing = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
             bool wantMove = MoveClips.Any(c => clips.ContainsKey(c));
             bool hasMove = existing != null && existing.parameters.Any(p => p.name == "MoveX");
-            bool current = existing != null && existing.parameters.Any(p => p.name == ControllerVersion);
+            string version = LayoutVersion(clips);
+            bool current = existing != null && existing.parameters.Any(p => p.name == version);
             if (existing != null && existing.layers.Length > 0 && existing.layers[0].stateMachine.states.Length >= 6 && hasMove == wantMove && current)
                 return existing;   // already built for this set of clips: keep it (and its GUID) as is
             if (existing != null) AssetDatabase.DeleteAsset(ControllerPath);
@@ -201,7 +202,7 @@ namespace RingFighter.EditorTools
             ac.AddParameter("Airborne", AnimatorControllerParameterType.Bool);
             ac.AddParameter("Charging", AnimatorControllerParameterType.Bool);
             ac.AddParameter("Hit", AnimatorControllerParameterType.Trigger);
-            ac.AddParameter(ControllerVersion, AnimatorControllerParameterType.Float);   // unused; marks this layout version
+            ac.AddParameter(version, AnimatorControllerParameterType.Float);   // unused; marks this layout + clip set
             if (wantMove)
             {
                 ac.AddParameter("MoveX", AnimatorControllerParameterType.Float);
@@ -272,6 +273,14 @@ namespace RingFighter.EditorTools
         // Bump when the controller layout or blend times change, so existing controllers get rebuilt.
         private const string ControllerVersion = "_layout_v2";
 
+        // The version plus which movement clips exist, so adding a clip later (e.g. strafe_right) rebuilds it too.
+        private static string LayoutVersion(Dictionary<string, AnimationClip> clips)
+        {
+            string s = ControllerVersion + "_";
+            for (int i = 0; i < MoveClips.Length; i++) s += clips.ContainsKey(MoveClips[i]) ? "1" : "0";
+            return s;
+        }
+
         private static AnimatorState Locomotion(AnimatorController ac, AnimatorStateMachine sm, Dictionary<string, AnimationClip> clips)
         {
             BlendTree tree = new BlendTree();
@@ -287,9 +296,24 @@ namespace RingFighter.EditorTools
             for (int i = 0; i < MoveClips.Length; i++)
                 if (clips.TryGetValue(MoveClips[i], out c)) tree.AddChild(c, MoveDirections[i]);
 
+            // Missing one side? Use the other side's clip mirrored (humanoid rigs can mirror left/right).
+            AddMirrored(tree, clips, "strafe_right", "strafe_left", new Vector2(1f, 0f));
+            AddMirrored(tree, clips, "strafe_left", "strafe_right", new Vector2(-1f, 0f));
+
             AnimatorState s = sm.AddState("Locomotion");
             s.motion = tree;
             return s;
+        }
+
+        private static void AddMirrored(BlendTree tree, Dictionary<string, AnimationClip> clips, string missing, string source, Vector2 position)
+        {
+            AnimationClip c;
+            if (clips.ContainsKey(missing) || !clips.TryGetValue(source, out c)) return;
+            tree.AddChild(c, position);
+            ChildMotion[] children = tree.children;
+            children[children.Length - 1].mirror = true;
+            tree.children = children;
+            Debug.Log("RingFighter enemy: no " + missing + " clip, using " + source + " mirrored.");
         }
 
         private static AnimatorState State(AnimatorStateMachine sm, string name, Dictionary<string, AnimationClip> clips, string clip, float speed)

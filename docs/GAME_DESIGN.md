@@ -250,4 +250,6 @@ Record each headset session here: date, build, what worked, what didn't.
   side first: import with no keyframe compression and loop-pose blending, longer Animator blends, no flinch
   self-restart (min 0.8 s between flinches), gradual floor-safeguard lift. If stutter remains, find out when it
   happens; noisy clips themselves would go back to the art conversation.
+  - Movement clips arrived from the art conversation: strafe_left, walk_forward, walk_back (no strafe_right). The
+    blend tree mirrors strafe_left for the missing side; a real strafe_right is picked up automatically if added.
 

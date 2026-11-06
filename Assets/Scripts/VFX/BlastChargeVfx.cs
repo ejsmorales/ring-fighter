@@ -17,7 +17,7 @@ namespace RingFighter
         private Transform halo2;
         private ParticleSystem inflow;
         private Renderer[] renderers;
-        private bool visible;
+        private bool visible = true;   // starts "shown" so the first SetVisible(false) really hides the freshly built parts
         private bool wasFull;
 
         public void Init(ChargedBlastMove b)

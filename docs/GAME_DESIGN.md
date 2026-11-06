@@ -291,4 +291,8 @@ Record each headset session here: date, build, what worked, what didn't.
   the cars. **Changes (untested):** play area is now the whole open lot, rectangular, up to the car bumpers (player
   half-size 21 x 19 m, enemy 20 x 18 m; rows pushed out to 20/22 m); store fronts laid out by width using every
   `Env_StoreFront[_B.._F]` design available; new store designs requested from the art conversation.
+  - Owner: a green light at the start spot stays behind when you move; recharge should light the hand without the
+    upward beam. Cause of the first: WhirlwindVfx (and LaserVfx, BlastChargeVfx) started with `visible = false`, so
+    their first `SetVisible(false)` returned early and the freshly built parts stayed drawn at the origin until first
+    use. Fixed; recharge beam removed.
 

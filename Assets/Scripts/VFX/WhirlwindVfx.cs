@@ -20,7 +20,7 @@ namespace RingFighter
         private Material innerMat;
         private ParticleSystem sparks;
         private Renderer[] renderers;
-        private bool visible;
+        private bool visible = true;   // starts "shown" so the first SetVisible(false) really hides the freshly built parts
 
         private float fade;
         private float rise;

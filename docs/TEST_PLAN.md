@@ -27,6 +27,9 @@ repeats with tints. Untested.
 | T5 | Find the wrecked car | Crashed into the south row (behind you, left), no parked car overlapping it | — |
 | T6 | Store strip ahead | A continuous row of store fronts, evenly spaced (still the same design until new ones are added) | — |
 | T7 | Get knocked out | Fight restarts with you in the middle and him at his start | `Fight restarted` |
+| T8 | Start the game and walk away from the start spot | No green ring/glow left on the floor where you started (it was the whirlwind effect, built but never hidden until the first whirlwind) | — |
+| T9 | Laser, charged blast, whirlwind | Their effects still appear and disappear normally | — |
+| T10 | Recharge stance | The ring shines (green glow), no upward beam | `Recharging` |
 
 ## Regression (every build)
 

@@ -233,3 +233,14 @@ Record each headset session here: date, build, what worked, what didn't.
   - Structure: `EnemyBrain` decides, `TrainingDummy` stays the body. All values are public fields. Untested.
   - Still open: walk/strafe clips (he slides while moving, more visible now that he moves on purpose).
 
+- **2026-11-05 — first enemy AI build: "interesting, a little hectic".** Problems: (1) he could reappear behind you,
+  and there is no quick way to turn around; (2) he sometimes sank half into the floor; (3) the teleport was too quick
+  with no cue where he'd appear; (4) his erratic movement made the whirlwind mostly irrelevant (owner: not sure it
+  needs changing yet). **Changes (untested):** flank angle 60-90 to 35-55 degrees, never beyond 60 from your facing
+  (skip the teleport if no valid spot); warning 0.6 to 1.1 s with a yellow ring + light column at the destination and
+  the warning sound played from there; calmer pacing (circle 1.0 to 0.8 m/s, direction changes every 3-6 s, 35%
+  pauses, teleport every 15-25 s). Sinking: cause not identified from the code; added a foot-grounding safeguard in
+  `EnemyAnimationDriver` that raises the model if a foot goes below the floor and logs the animation state, to find
+  the real cause. Open: snap turn on the ring-hand stick; whirlwind vs a moving target (pull, homing, or he slows
+  near it).
+

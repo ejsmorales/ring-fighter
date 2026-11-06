@@ -26,11 +26,11 @@ namespace RingFighter
         [Tooltip("Speed (m/s) when approaching or backing off.")]
         public float approachSpeed = 1.2f;
         [Tooltip("Speed (m/s) when circling around you.")]
-        public float circleSpeed = 1.0f;
+        public float circleSpeed = 0.8f;
         [Tooltip("He switches circling direction every this many seconds (random between min and max).")]
-        public Vector2 circleFlipEvery = new Vector2(2f, 5f);
+        public Vector2 circleFlipEvery = new Vector2(3f, 6f);
         [Tooltip("Chance (0-1) that a direction change is a short stop instead.")]
-        [Range(0f, 1f)] public float pauseChance = 0.25f;
+        [Range(0f, 1f)] public float pauseChance = 0.35f;
         [Tooltip("He always backs off if you get closer than this (meters).")]
         public float minDistance = 2.5f;
         [Tooltip("How quickly he changes speed (m/s per second). Lower = heavier, more readable movement.")]
@@ -60,7 +60,7 @@ namespace RingFighter
 
         [Header("Teleport")]
         [Tooltip("He teleports on his own every this many seconds (random between min and max).")]
-        public Vector2 teleportEvery = new Vector2(12f, 20f);
+        public Vector2 teleportEvery = new Vector2(15f, 25f);
         [Tooltip("Never two teleports closer together than this (seconds), even to escape.")]
         public float minTeleportGap = 6f;
         [Tooltip("He also teleports away if he takes this much damage within 'Escape Window' seconds...")]
@@ -68,8 +68,10 @@ namespace RingFighter
         public float escapeWindow = 2f;
         [Tooltip("...or when you start charging a blast.")]
         public bool escapeFromBlast = true;
-        [Tooltip("Where he reappears: this many degrees left or right of where you face (never behind you).")]
-        public Vector2 flankAngle = new Vector2(60f, 90f);
+        [Tooltip("Where he reappears: this many degrees left or right of where you face, so he stays in your side vision.")]
+        public Vector2 flankAngle = new Vector2(35f, 55f);
+        [Tooltip("He never reappears further than this many degrees from where you face (checked after keeping him in the arena).")]
+        public float maxReappearAngle = 60f;
 
         /// <summary>What he's doing, for the debug panel.</summary>
         public string State { get; private set; }
@@ -269,24 +271,30 @@ namespace RingFighter
             else if (Time.time >= nextTeleport && !dummy.IsCharging) reason = "timer";
             if (reason == null) return false;
 
-            // 60-90 degrees to your left or right of where you face, at his preferred distance.
+            // To your left or right of where you face, at his preferred distance, never behind you. Tries both
+            // sides, then smaller angles and distances, so keeping him inside the arena can't push him behind you.
             Vector3 facing = player.rig != null ? player.rig.FlatForward() : Vector3.forward;
             float side = Random.value < 0.5f ? -1f : 1f;
-            Vector3 dest = Vector3.zero;
+            float baseAngle = Random.Range(flankAngle.x, flankAngle.y);
+            Vector3 dest = playerPos + facing * Mathf.Min(preferredDistance, 3f);   // last resort: in front of you
             bool ok = false;
-            for (int attempt = 0; attempt < 2 && !ok; attempt++)
+            float[] angleScale = { 1f, 1f, 0.5f, 0.5f, 0f };
+            float[] distScale = { 1f, 1f, 0.75f, 0.75f, 0.6f };
+            for (int attempt = 0; attempt < angleScale.Length && !ok; attempt++)
             {
-                float angle = Random.Range(flankAngle.x, flankAngle.y) * side;
-                dest = playerPos + Quaternion.Euler(0f, angle, 0f) * facing * preferredDistance;
-                ok = new Vector2(dest.x, dest.z).magnitude <= dummy.arenaRadius - 0.5f;
-                side = -side;   // second try: the other side
+                float angle = baseAngle * angleScale[attempt] * side;
+                Vector3 candidate = playerPos + Quaternion.Euler(0f, angle, 0f) * facing * (preferredDistance * distScale[attempt]);
+                Vector3 offset = candidate - playerPos;
+                bool inside = new Vector2(candidate.x, candidate.z).magnitude <= dummy.arenaRadius - 0.5f;
+                bool inView = Vector3.Angle(facing, offset) <= maxReappearAngle;
+                if (inside && inView)
+                {
+                    dest = candidate;
+                    ok = true;
+                }
+                side = -side;   // alternate sides
             }
-            if (!ok)
-            {
-                Vector2 f = new Vector2(dest.x, dest.z).normalized * (dummy.arenaRadius - 0.5f);
-                dest.x = f.x;
-                dest.z = f.y;
-            }
+            if (!ok) return false;   // nowhere good (you're at the very edge): skip this teleport
             dest.y = me.y;
 
             if (!dummy.BeginTeleport(dest)) return false;

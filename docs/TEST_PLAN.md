@@ -8,31 +8,24 @@ Before testing: press **Y** (left controller) to show the debug panel. Its "Rece
 something didn't. The top lines show the ring hand, focus distance and the physics self-test.
 (Everything in this build is untested: built in the cloud, not yet run on the headset.)
 
-## This build — enemy AI (2026-11-04, branch `claude/enemy-ai`)
+## This build — enemy AI fixes (2026-11-05)
 
-The opponent now thinks for himself (EnemyBrain): he keeps his distance and circles you, sometimes sidesteps your
-shots, shoots sooner when you leave an opening, and teleports to your flank with a quick shot. He still slides
-(no walk/strafe clips yet). Untested (built in the cloud only). The debug panel has a new `Enemy:` line showing
-what he is doing.
+Last build ("a little hectic"): he could teleport behind you (no quick way to turn); he sometimes sank half into the
+floor; the teleport was too quick with no hint of where he'd appear; his erratic movement made the whirlwind hard to
+use. Changes: reappears only 35-55 degrees to your side and never more than 60 degrees from where you face (if that
+spot is outside the arena he tries closer/other side, else skips the teleport); warning is longer (1.1 s) and a
+**yellow ring + rising column of light appears at the destination**, with the warning sound coming from there;
+calmer pace (circles slower, changes direction less often, pauses more, teleports every 15-25 s); a floor safeguard
+lifts his model if an animation pushes his feet into the floor, and logs which animation did it. Untested.
 
 | # | Do this | Expected | Panel shows |
 | --- | --- | --- | --- |
-| T1 | Before picking the ring hand | He stands still | `Enemy: waiting` |
-| T2 | Pick the ring hand and watch | He circles around you at about 5.5 m, switches direction every few seconds and sometimes stops to watch | `Enemy: circling` / `watching` |
-| T3 | Walk or dash toward him | He backs off to keep his distance; if you get within 2.5 m he backs off faster | `Enemy: backing off` |
-| T4 | Move away from him | He follows to close the gap | `Enemy: closing in` |
-| T5 | Watch him while he charges a shot | He slows down while the glow is on, so the shot is readable | `Enemy: aiming` |
-| T6 | Fire single bolts straight at him, several times | About 4 in 10 times he sidesteps (~1.3 m) just after you fire, and the bolt misses. Not more than once every 1.5 s | `Dummy dodges`, `Enemy: DODGING` |
-| T7 | Fire a charged blast at him | Same chance to sidestep it | `Dummy dodges` |
-| T8 | Wait 12-20 s | He flickers yellow for ~0.6 s with a rising sound, vanishes, and reappears 60-90 degrees to your LEFT or RIGHT (never behind) with a pop, then fires a quick, faster bolt almost at once | `Dummy teleports (timer)`, `Dummy quick-fires after teleporting` |
-| T9 | Start charging a blast | He teleports away (if he hasn't teleported in the last 6 s) | `Dummy teleports (escaping your blast)` |
-| T10 | Hit him hard quickly (35+ damage within 2 s) | He teleports away | `Dummy teleports (escaping damage)` |
-| T11 | Drain your ring energy below 20% | His next shot comes noticeably sooner (at most once every 5 s) | `Dummy punishes an opening (your energy is low)` |
-| T12 | Finish a laser, whirlwind or blast | Within ~1 s his next shot starts sooner | `Dummy punishes an opening (after your big attack)` |
-| T13 | Whirlwind lift, knock-out, get up | Still work; he doesn't move or teleport while lifted, knocked out or getting up | `Enemy: in the air` / `getting up` |
-| T14 | Get knocked out yourself | Fight restarts; he is back at his starting spot | `Fight restarted` |
-| T15 | He never leaves the arena (about 10 m from the middle) or walks into you | — | — |
-| T16 | Feel: too easy or too hard? Dodges too often? Teleport too frequent, too surprising? Is the teleport warning enough to react? | Report | — |
+| T1 | Wait for a teleport (15-25 s) | He flickers for about a second; at the same time a yellow ring and column of light grow on the floor where he'll appear, and the rising sound comes from that side | `Dummy teleports (timer)` |
+| T2 | Watch where he reappears, several times | Always in your side vision, left or right, never behind you; then a quick bolt | `Dummy quick-fires after teleporting` |
+| T3 | Stand near the edge of the arena facing outward and wait | He still only appears to your sides or front, or skips the teleport | — |
+| T4 | Play a few minutes and watch his feet | He never sinks into the floor. If a line `Enemy sank 0.xx m (StateName) - corrected` appears on the panel, tell Claude the state name (that's the animation causing it) | `Enemy sank ...` (report it) |
+| T5 | Overall pace | Calmer than last build: still circles and dodges, but less erratic | `Enemy: circling` / `watching` |
+| T6 | Try the whirlwind on him again | Report whether it's usable now (it is unchanged; see the options Claude gave) | Report |
 
 ## Regression (every build)
 
@@ -52,6 +45,7 @@ what he is doing.
 | R12 | Pause with the left menu button | Freezes and resumes (works as of 2026-10-19) |
 | R13 | Off-hand stick movement | Dash and Smooth both work (pass as of 2026-10-19) |
 | R14 | Bolt clashes, laser cuts bolts, headshots both ways, orange head-aimed shots | Passed 2026-10-20 |
+| R19 | Enemy AI basics: keeps distance and circles, dodges some shots, punishes openings, escapes your blast by teleporting | Passed 2026-11-05 ("hectic") |
 | R18 | Player Platform disc gone (pass/fail not reported yet) | — |
 | R17 | Enemy01 animations: idle, aim/shoot from the right hand, flinch, lifted, knocked out, get up (no shooting while getting up) | Passed 2026-10-21 |
 | R16 | Ring effects (bolts, laser, shields, whirlwind, blast, impacts, pause effects panel) | Passed 2026-10-21 |

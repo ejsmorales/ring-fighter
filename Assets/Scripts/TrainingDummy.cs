@@ -57,7 +57,7 @@ namespace RingFighter
 
         [Header("Teleport (started by EnemyBrain)")]
         [Tooltip("Seconds he flickers in place (the warning) before he vanishes.")]
-        public float teleportShimmerTime = 0.6f;
+        public float teleportShimmerTime = 1.1f;
         [Tooltip("Seconds he is invisible between the two spots.")]
         public float teleportGapTime = 0.15f;
         [Tooltip("Seconds of charge-up glow for the quick shot right after he reappears.")]
@@ -109,8 +109,8 @@ namespace RingFighter
         public event System.Action Damaged;
         /// <summary>Raised on every bit of damage with the amount (EnemyBrain uses it to decide to escape).</summary>
         public event System.Action<float> DamageTaken;
-        /// <summary>Raised when the teleport warning starts (position he is leaving).</summary>
-        public event System.Action<Vector3> TeleportStarted;
+        /// <summary>Raised when the teleport warning starts (where he is, where he will appear).</summary>
+        public event System.Action<Vector3, Vector3> TeleportStarted;
         /// <summary>Raised the moment he jumps (from, to).</summary>
         public event System.Action<Vector3, Vector3> Teleported;
 
@@ -118,6 +118,8 @@ namespace RingFighter
         public Vector3 DesiredVelocity { get; set; }
         /// <summary>Where he stands on the floor (without knockback or whirlwind height).</summary>
         public Vector3 GroundPosition { get { return groundPos; } }
+        /// <summary>Height of the arena floor under him (his starting height).</summary>
+        public float FloorHeight { get { return home.y; } }
         public bool IsTeleporting { get { return teleport != Teleport.None; } }
         /// <summary>True when he is free to move, dodge, shoot or teleport.</summary>
         public bool CanAct { get { return IsAlive && air == Air.Grounded && !IsGettingUp && teleport == Teleport.None; } }
@@ -345,7 +347,7 @@ namespace RingFighter
             teleportTo = destination;
             charging = false;
             HideOrb();
-            if (TeleportStarted != null) TeleportStarted(transform.position);
+            if (TeleportStarted != null) TeleportStarted(transform.position, teleportTo);
             return true;
         }
 

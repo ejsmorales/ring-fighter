@@ -22,7 +22,16 @@ namespace RingFighter
         [Tooltip("Smoothing (seconds) for the walk/strafe blend.")]
         public float moveDamping = 0.15f;
 
+        [Header("Floor safety")]
+        [Tooltip("Keeps his feet from sinking into the floor: if an animation pushes his lowest foot below this height above the floor (meters), the model is raised to match.")]
+        public float footClearance = 0.04f;
+        [Tooltip("How fast (m/s) a raised model settles back down once it no longer needs lifting.")]
+        public float settleSpeed = 1.5f;
+
         private bool hasMove;
+        private Transform[] feet;
+        private float floorLift;
+        private float lastSinkLog = -10f;
         private Vector3 lastPosition;
         private static readonly int MoveXId = Animator.StringToHash("MoveX");
         private static readonly int MoveZId = Animator.StringToHash("MoveZ");
@@ -53,6 +62,20 @@ namespace RingFighter
             lastPosition = transform.position;
 
             Transform hand = animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.RightHand) : null;
+            if (animator.isHuman)
+            {
+                // Toes if the rig has them, else the ankles (which sit higher, so allow more room).
+                Transform lt = animator.GetBoneTransform(HumanBodyBones.LeftToes);
+                Transform rt = animator.GetBoneTransform(HumanBodyBones.RightToes);
+                Transform lf = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
+                Transform rf = animator.GetBoneTransform(HumanBodyBones.RightFoot);
+                if (lt != null && rt != null) feet = new[] { lt, rt };
+                else if (lf != null && rf != null)
+                {
+                    feet = new[] { lf, rf };
+                    footClearance = Mathf.Max(footClearance, 0.07f);
+                }
+            }
             if (hand != null) dummy.muzzleBone = hand;
             else MoveLog.Add("Enemy model: right hand bone not found, bolts fire from the chest");
         }
@@ -72,6 +95,50 @@ namespace RingFighter
             if (!dummy.IsAlive || dummy.IsAirborne || Time.time - lastHit < minHitInterval) return;
             lastHit = Time.time;
             animator.SetTrigger(HitId);
+        }
+
+        // After the animation has posed him: if his feet ended up below the floor, raise the model so they don't.
+        // Logs which animation did it, so the cause can be fixed properly.
+        private void LateUpdate()
+        {
+            if (feet == null) return;
+            Transform model = animator.transform;
+            bool grounded = dummy.IsAlive && !dummy.IsAirborne;
+            if (!grounded)
+            {
+                floorLift = Mathf.MoveTowards(floorLift, 0f, settleSpeed * Time.deltaTime);
+            }
+            else
+            {
+                float lowest = Mathf.Min(feet[0].position.y, feet[1].position.y);
+                float error = dummy.FloorHeight + footClearance - lowest;   // > 0 means sunk
+                if (error > 0.02f)
+                {
+                    floorLift += error;
+                    if (error > 0.15f && Time.time - lastSinkLog > 2f)
+                    {
+                        lastSinkLog = Time.time;
+                        MoveLog.Add("Enemy sank " + error.ToString("0.00") + " m (" + CurrentStateName() + ") - corrected");
+                    }
+                }
+                else if (floorLift > 0f && error < -0.01f)
+                {
+                    floorLift = Mathf.Max(0f, floorLift - Mathf.Min(-error, settleSpeed * Time.deltaTime));
+                }
+            }
+            floorLift = Mathf.Clamp(floorLift, 0f, 2f);
+            Vector3 p = model.localPosition;
+            p.y = floorLift;
+            model.localPosition = p;
+        }
+
+        private string CurrentStateName()
+        {
+            AnimatorStateInfo s = animator.GetCurrentAnimatorStateInfo(0);
+            string[] names = { "Locomotion", "Idle", "Charge", "Hit", "Lifted", "KnockedOut", "GetUp" };
+            for (int i = 0; i < names.Length; i++)
+                if (s.IsName(names[i])) return names[i];
+            return "state " + s.shortNameHash;
         }
 
         private void Update()

@@ -8,23 +8,30 @@ Before testing: press **Y** (left controller) to show the debug panel. Its "Rece
 something didn't. The top lines show the ring hand, focus distance and the physics self-test.
 (Everything in this build is untested: built in the cloud, not yet run on the headset.)
 
-## This build — new recharge motion (2026-11-06, second build)
+## This build — mall parking lot arena (2026-11-06, branch `claude/arena`)
 
-Last build: "a lot more manageable" (evade, dodge label). Owner: change the recharge motion from raising the hand to
-"cocking" the ring hand so you can see it shine. **New motion:** make a fist with the RING hand (squeeze its grip)
-and bring the ring up in front of your face, about a forearm's length away (8-50 cm ahead, chin to forehead
-height). The off hand no longer needs to grip. Still: no attacks while charging, slow walk, the enemy sees it as an
-opening. The glow is now concentrated on the ring itself, with only a small wisp above it so it doesn't block your
-view. Untested.
+New arena modeled on the owner's photo of a tropical strip-mall lot on an overcast day: grey cloudy sky and soft
+light with haze, asphalt with yellow stall lines and parking stops, yellow-curbed grass islands with palms, trees and
+shrubs, light poles, rows of parked cars, a sidewalk and store fronts ahead, a watch tower, stop sign, cart corral,
+a wrecked car near the fight, and green hills with small houses all around. The middle (about 11 m around you)
+stays open; nothing blocks shots or movement. Until the Meshy props arrive in `Assets/Art/Environment/<Name>/`,
+each prop is a simple placeholder shape; each real prop replaces its placeholder automatically on the next build.
+Includes everything from `claude/enemy-ai`. Untested.
 
 | # | Do this | Expected | Panel shows |
 | --- | --- | --- | --- |
-| T1 | Make a fist with the ring hand (grip), bring the ring in front of your face | Ring shines (pulsing green glow), soft pulses, energy fills fast | `Recharging`, `Recharge: ... CHARGING` |
-| T2 | Move the ring a little while charging | Keeps charging within a small margin | — |
-| T3 | Lower the hand or open the fist | Stops | `Recharge ended: ring lowered` / `fist released` |
-| T4 | Fist held but hand down at your side | No charge; hint appears | `Recharge: fist OK, bring the ring up in front of your face` |
-| T5 | Normal fighting (focus laser, shield, bolts) | Doesn't start recharging by accident (the focus stance holds triggers, not the grip) | — |
-| T6 | Does the glow block your view of him? Comfortable? | Report | — |
+| T1 | Start the game and look around | Grey overcast sky (not the old dark blue), soft light, asphalt with yellow lines under you, open space around you | — |
+| T2 | Look ahead (past the enemy) | Store fronts behind rows of parked cars, sidewalk with a yellow curb, crosswalk stripes, a watch tower on a pole | — |
+| T3 | Look all around | Parked car rows on all four sides, islands with palms/trees/shrubs and light poles, green hills with little houses in the haze far away | — |
+| T4 | Find the wrecked car | Dark crushed car about 13 m away, behind-left | — |
+| T5 | Fight normally (bolts, laser, blast, whirlwind, his AI, teleport) | Everything works as before; shots fly through props (only the floor stops them) | — |
+| T6 | Move to the edge of your 4 m area and look around | No props inside the fighting area; he never walks into cars (he stays within 10 m of the middle) | — |
+| T7 | Performance | Smooth, no stutter when turning (watch for hitches looking toward the stores and hills) | Report |
+| T8 | Look | Too dark/bright? Haze too strong? Does it feel like the photo? | Report |
+
+When Meshy props are added: build again, check each prop's size, that it faces the right way and sits on the
+ground (the build log lists `RingFighter arena: using prop ...` and any auto-scaling), then commit
+`Assets/Art/Environment` (Git LFS handles the `.fbx`/`.png`).
 
 ## Regression (every build)
 
@@ -44,6 +51,7 @@ view. Untested.
 | R12 | Pause with the left menu button | Freezes and resumes (works as of 2026-10-19) |
 | R13 | Off-hand stick movement | Dash and Smooth both work (pass as of 2026-10-19) |
 | R14 | Bolt clashes, laser cuts bolts, headshots both ways, orange head-aimed shots | Passed 2026-10-20 |
+| R23 | Recharge stance: fist + ring in front of your face (passed?) | — |
 | R22 | Enemy EVADE (label, untouchable flicker, no counter-shot) and DODGE label | Passed 2026-11-06 ("a lot more manageable") |
 | R21 | Snap turn (ring-hand stick), smoother enemy animation, walk/strafe clips | Passed 2026-11-05 ("much smoother") |
 | R20 | Enemy teleport: warning + destination marker, appears only to your sides | Passed 2026-11-05 ("better") |

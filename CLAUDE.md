@@ -32,4 +32,4 @@ Working agreements:
 Current state and where to pick up: `docs/GAME_DESIGN.md` (playtest log, newest at the bottom) and
 `docs/TEST_PLAN.md` ("This build"). Active branch: `claude/vr-setup` (not yet merged to `main`). `claude/vfx` (ring effects) passed testing and was
 merged into it on 2026-10-21. Enemy character integration is on `claude/enemy-model` (art committed). Enemy AI is on `claude/enemy-ai`
-(branched from `claude/enemy-model`, untested).
+(branched from `claude/enemy-model`, tested 2026-11-06). The parking-lot arena is on `claude/arena` (from `claude/enemy-ai`).

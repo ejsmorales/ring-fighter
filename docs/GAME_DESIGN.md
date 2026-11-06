@@ -275,3 +275,10 @@ Record each headset session here: date, build, what worked, what didn't.
   the ring hand's grip now). Glow concentrated on the ring. Next topic per owner: a map/arena to make the scene more
   interesting. Untested.
 
+- **2026-11-06 — arena: mall parking lot (branch `claude/arena`, from `claude/enemy-ai`).** Owner's idea: a random
+  super-powered fight breaking out in a mall parking lot; reference photo of a tropical strip mall on an overcast day
+  (palms, yellow-curbed islands, tall light poles, watch tower, hills with houses). **Decisions:** mostly visual, open
+  floor (nothing blocks shots); props made with Meshy (owner's paid plan) in the art conversation, original names, no
+  real brands; layout, floor, lines, curbs, sky, haze and hills built in code by `Assets/Editor/ArenaBuilder.cs`;
+  each prop has a placeholder until its Meshy model exists (`EnvironmentArtSetup`). Untested.
+

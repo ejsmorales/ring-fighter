@@ -49,6 +49,8 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 | `EnemyBrain.cs` | The opponent's decision making ("duelist"): keeps range and circles, dodges `Projectile.Spawned` shots, punishes openings (`TrainingDummy.HurryNextShot`), teleports to your flank (`TrainingDummy.BeginTeleport`). Sets `TrainingDummy.DesiredVelocity`; the dummy body does the moving, shooting and animation. |
 | `VFX/TeleportVfx.cs` | Teleport warning sparks and 3D sounds (reads `TrainingDummy.TeleportStarted` / `Teleported`). |
 | `EnemyAnimationDriver.cs` | Plays the enemy model's Animator from TrainingDummy state (Alive, Airborne, Charging bools; Hit trigger on `Damaged`) and points the dummy's muzzle at the right hand bone. Reads only. |
+| `Editor/ArenaBuilder.cs` | Builds the mall parking lot arena into the scene: sky/light/fog, asphalt and lines, curbs and islands, hills with houses, prop layout (placeholders until Meshy props exist). Generated materials go to `Assets/Art/Generated` (git-ignored). |
+| `Editor/EnvironmentArtSetup.cs` | Import settings and URP materials for props in `Assets/Art/Environment/<Name>/` (`<Name>.fbx` + `_BaseColor/_Normal/_MetallicSmoothness.png`). |
 | `Editor/EnemyArtSetup.cs` | Build-time setup of `Assets/Art/Enemy`: humanoid import settings, URP Lit material, Animator controller. Called by the scene builder; no-op (capsule dummy) if the art isn't on the PC. |
 | `PauseControl.cs` | Left menu button toggles pause (`Time.timeScale` 0, floating "PAUSED" sign). `PauseControl.IsPaused` stops ring moves in `RingController`. |
 | `PlayerHud.cs` | Builds the curved health/energy bars as meshes, soft-follows the head, draws the red flash and death fade. |

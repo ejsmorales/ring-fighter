@@ -76,17 +76,7 @@ namespace RingFighter.EditorTools
             // ---- New scene ----
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.42f, 0.47f, 0.58f);
-
-            GameObject lightGo = new GameObject("Directional Light");
-            Light light = lightGo.AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.intensity = 1.1f;
-            lightGo.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
-
-            // Floor and the spot where the player stands.
-            Prim(PrimitiveType.Plane, "Floor", null, Vector3.zero, new Vector3(3f, 1f, 3f), floorMat, true);
+            // Sky, light and the floor come from the arena (built after the camera exists, below).
             // (The green "Player Platform" disc was removed 2026-10-21: with stick movement it just stayed behind.)
 
             // ---- Player rig ----
@@ -103,6 +93,9 @@ namespace RingFighter.EditorTools
             cam.farClipPlane = 200f;
             camGo.AddComponent<AudioListener>();
             TrackedNode head = camGo.AddComponent<TrackedNode>();
+
+            // ---- Arena: mall parking lot (sky, light, floor, props) ----
+            ArenaBuilder.Build(cam);
             head.node = TrackedNode.NodeType.Head;
 
             TrackedNode left = BuildHand("Left Hand", TrackedNode.NodeType.LeftHand, rigGo.transform, handMat, ringMat);

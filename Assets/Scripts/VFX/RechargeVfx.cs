@@ -3,8 +3,9 @@ using UnityEngine;
 namespace RingFighter
 {
     /// <summary>
-    /// Recharge stance look: a pulsing green glow around the raised ring and a column of light rising from it while
-    /// the stance is held. Visual only: RechargeMove does the recharging.
+    /// Recharge stance look: the ring in front of your face shines with a bright pulsing green glow, and a short,
+    /// faint wisp of light rises from it (kept small so it doesn't block your view). Visual only: RechargeMove does
+    /// the recharging.
     /// </summary>
     public class RechargeVfx : MonoBehaviour
     {
@@ -47,12 +48,13 @@ namespace RingFighter
             if (hand == null) return;
 
             root.gameObject.SetActive(true);
-            root.position = hand.transform.position;
-            float pulse = 1f + 0.12f * Mathf.Sin(Time.time * 10f);
-            glow.localScale = Vector3.one * (0.22f * strength * pulse);
-            column.localScale = new Vector3(0.12f, 1.6f * strength, 0.12f);
+            Transform gem = hand.transform.Find("Ring Gem");
+            root.position = gem != null ? gem.position : hand.transform.position;
+            float pulse = 1f + 0.15f * Mathf.Sin(Time.time * 10f);
+            glow.localScale = Vector3.one * (0.14f * strength * pulse);
+            column.localScale = new Vector3(0.05f, 0.45f * strength, 0.05f);
             if (glowMat != null) glowMat.SetFloat(VfxIds.AlphaId, strength);
-            if (columnMat != null) columnMat.SetFloat(VfxIds.AlphaId, strength * 0.7f);
+            if (columnMat != null) columnMat.SetFloat(VfxIds.AlphaId, strength * 0.45f);
         }
 
         private void OnDestroy()

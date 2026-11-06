@@ -8,33 +8,23 @@ Before testing: press **Y** (left controller) to show the debug panel. Its "Rece
 something didn't. The top lines show the ring hand, focus distance and the physics self-test.
 (Everything in this build is untested: built in the cloud, not yet run on the headset.)
 
-## This build — recharge made easier to trigger and see; DODGE label; EVADE mechanic (2026-11-06)
+## This build — new recharge motion (2026-11-06, second build)
 
-Last build: the recharge stance never triggered; the enemy seemed to become "immune" after several hits. There is
-no immunity in the code: hits only stop counting while he is knocked out. Likely causes of "immune": he sidesteps
-(40% of shots aimed at him), he escape-teleports after 35+ damage in 2 s, or your bolt collides with his incoming
-bolt and both cancel (dark burst). Changes: recharge starts with the ring hand at forehead height or higher (was
-5 cm above the head) and stays on down to 25 cm below head height; a `Recharge:` line on the debug panel shows
-both grip pressures and the ring hand's height, and a hint appears if the grips are held but the hand is too low;
-a floating **DODGE** appears over him when he sidesteps. The "immunity" the owner saw with the laser was the escape
-teleport's flicker; it is now a deliberate **EVADE**: after 35+ damage in 2 s (or when you charge a blast) he shows
-EVADE, is untouchable while flickering, reappears to your side and does not counter-shoot right away. Untested.
-
-**The recharge motion:** squeeze and hold the **grip** buttons (the side buttons under your middle fingers) on
-**both** controllers, then raise the ring hand straight up over your head, like holding the ring to the sky. The
-off hand can stay anywhere.
+Last build: "a lot more manageable" (evade, dodge label). Owner: change the recharge motion from raising the hand to
+"cocking" the ring hand so you can see it shine. **New motion:** make a fist with the RING hand (squeeze its grip)
+and bring the ring up in front of your face, about a forearm's length away (8-50 cm ahead, chin to forehead
+height). The off hand no longer needs to grip. Still: no attacks while charging, slow walk, the enemy sees it as an
+opening. The glow is now concentrated on the ring itself, with only a small wisp above it so it doesn't block your
+view. Untested.
 
 | # | Do this | Expected | Panel shows |
 | --- | --- | --- | --- |
-| T1 | With the panel open, squeeze both grips (hands down) | `Recharge:` line shows both grips near 1.0 and the ring hand well below the head; a hint says to raise the ring hand | `Recharge: grips OK, raise the ring hand above your head` |
-| T2 | Keep squeezing, raise the ring hand overhead | Charging starts: green glow and column at the ring, energy fills fast | `Recharging`, `CHARGING` on the Recharge line |
-| T3 | If T2 doesn't start | Read the Recharge line: which grip is under 0.7, or what height is shown, and tell Claude | Report the line |
-| T4 | Fire bolts at him until he sidesteps | Yellow DODGE word floats over him each time he dodges | `Dummy dodges` |
-| T5 | Hold the laser on him (or rapid-fire bolts) for about a second | **EVADE** floats over him, he flickers and your attacks pass through him during the flicker, then he reappears to your side (marker shows where) and does **not** shoot right away (waits ~3 s) | `Dummy EVADES (escaping damage): untouchable while flickering, no counter-shot` |
-| T6 | Start charging a blast | Same evade (EVADE label, no counter-shot) | `Dummy EVADES (escaping your blast)...` |
-| T7 | Wait for a timed teleport (15-25 s, no heavy damage) | No EVADE label; he reappears and fires the quick shot as before | `Dummy teleports (timer)`, `Dummy quick-fires after teleporting` |
-| T8 | Shoot him while he flickers (either kind of teleport) | Shots and laser pass through (no damage, no hit number) | — |
-| T9 | Does EVADE make it clear to switch it up? Is the 35-damage-in-2-s trigger too sensitive with the laser? | Report | — |
+| T1 | Make a fist with the ring hand (grip), bring the ring in front of your face | Ring shines (pulsing green glow), soft pulses, energy fills fast | `Recharging`, `Recharge: ... CHARGING` |
+| T2 | Move the ring a little while charging | Keeps charging within a small margin | — |
+| T3 | Lower the hand or open the fist | Stops | `Recharge ended: ring lowered` / `fist released` |
+| T4 | Fist held but hand down at your side | No charge; hint appears | `Recharge: fist OK, bring the ring up in front of your face` |
+| T5 | Normal fighting (focus laser, shield, bolts) | Doesn't start recharging by accident (the focus stance holds triggers, not the grip) | — |
+| T6 | Does the glow block your view of him? Comfortable? | Report | — |
 
 ## Regression (every build)
 
@@ -54,6 +44,7 @@ off hand can stay anywhere.
 | R12 | Pause with the left menu button | Freezes and resumes (works as of 2026-10-19) |
 | R13 | Off-hand stick movement | Dash and Smooth both work (pass as of 2026-10-19) |
 | R14 | Bolt clashes, laser cuts bolts, headshots both ways, orange head-aimed shots | Passed 2026-10-20 |
+| R22 | Enemy EVADE (label, untouchable flicker, no counter-shot) and DODGE label | Passed 2026-11-06 ("a lot more manageable") |
 | R21 | Snap turn (ring-hand stick), smoother enemy animation, walk/strafe clips | Passed 2026-11-05 ("much smoother") |
 | R20 | Enemy teleport: warning + destination marker, appears only to your sides | Passed 2026-11-05 ("better") |
 | R19 | Enemy AI basics: keeps distance and circles, dodges some shots, punishes openings, escapes your blast by teleporting | Passed 2026-11-05 ("hectic") |

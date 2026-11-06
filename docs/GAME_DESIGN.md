@@ -270,3 +270,8 @@ Record each headset session here: date, build, what worked, what didn't.
     EVADE label, and after an evade he waits a full attack interval instead of the quick counter-shot. The timed
     teleport keeps its quick shot.
 
+- **2026-11-06 (afternoon) — evade build: "a lot more manageable".** Owner: change the recharge motion to "cocking"
+  the ring hand so you can see it shine. **Changed:** ring-hand fist (grip) + ring held in front of your face (only
+  the ring hand's grip now). Glow concentrated on the ring. Next topic per owner: a map/arena to make the scene more
+  interesting. Untested.
+

@@ -128,3 +128,9 @@ untracked files such as new art).
 A stale lock, usually left by a Claude session that ran git on the PC through the desktop app's file access (that
 access can't delete files, so git can't remove its own lock). Close Unity, then `Remove-Item .git\index.lock` and
 retry. Claude sessions with that access should only use read-only git (`git --no-optional-locks status/diff/log`).
+
+### No sound at all in the game
+Seen 2026-11-06: the first launch right after `build-quest.bat` had no sound; closing the app and starting it again
+from the headset had all sounds. Likely cause: the script launches the app over USB while the headset is off your
+head (asleep), and the app's audio output doesn't get connected. Fix: restart the app from the headset. Check: when
+you pick the ring hand a test clang plays, and the debug panel shows an `Audio: ... Hz, ... listeners 1` line.

@@ -16,7 +16,7 @@ namespace RingFighter
         [Tooltip("Turns the model around its vertical axis (degrees) if it faces the wrong way.")]
         public float modelYawDegrees = 0f;
         [Tooltip("Shortest gap (seconds) between two flinch animations, so the laser doesn't restart it every frame.")]
-        public float minHitInterval = 0.4f;
+        public float minHitInterval = 0.8f;
         [Tooltip("Ground speed (m/s) that plays the walk/strafe clips at full strength. Raise it if his feet move too fast for how far he goes.")]
         public float fullMoveSpeed = 1.1f;
         [Tooltip("Smoothing (seconds) for the walk/strafe blend.")]
@@ -27,6 +27,8 @@ namespace RingFighter
         public float footClearance = 0.04f;
         [Tooltip("How fast (m/s) a raised model settles back down once it no longer needs lifting.")]
         public float settleSpeed = 1.5f;
+        [Tooltip("How fast (m/s) the model is raised when a foot dips into the floor. Not instant, so it doesn't pop.")]
+        public float liftSpeed = 4f;
 
         private bool hasMove;
         private Transform[] feet;
@@ -114,7 +116,7 @@ namespace RingFighter
                 float error = dummy.FloorHeight + footClearance - lowest;   // > 0 means sunk
                 if (error > 0.02f)
                 {
-                    floorLift += error;
+                    floorLift += Mathf.Min(error, liftSpeed * Time.deltaTime);
                     if (error > 0.15f && Time.time - lastSinkLog > 2f)
                     {
                         lastSinkLog = Time.time;

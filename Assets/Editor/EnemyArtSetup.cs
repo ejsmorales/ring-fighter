@@ -24,7 +24,7 @@ namespace RingFighter.EditorTools
         public const string ControllerPath = Folder + "/Enemy01.controller";
         public const string MaterialPath = Folder + "/RF_Enemy01.mat";
         private const string TextureFolder = Folder + "/Textures";
-        private const string Marker = "RingFighter enemy import v1";
+        private const string Marker = "RingFighter enemy import v2";   // bump to re-apply import settings
 
         private static readonly string[] ClipNames = { "idle", "charge_shoot", "hit_react", "lifted_falling", "knocked_out", "get_up",
                                                        "strafe_left", "strafe_right", "walk_forward", "walk_back" };
@@ -111,6 +111,8 @@ namespace RingFighter.EditorTools
             mi.importCameras = false;
             mi.importLights = false;
             mi.importAnimation = isAnimation;
+            // No keyframe compression: it saves little for a few clips and can add small jitters.
+            mi.animationCompression = ModelImporterAnimationCompression.Off;
             mi.SaveAndReimport();
 
             if (isAnimation)
@@ -120,6 +122,7 @@ namespace RingFighter.EditorTools
                 for (int i = 0; i < clips.Length; i++)
                 {
                     clips[i].loopTime = loop;
+                    clips[i].loopPose = loop;   // blend the last frame into the first so loops don't pop
                     // Keep the animation in place: the game moves the dummy itself.
                     clips[i].lockRootRotation = true;
                     clips[i].lockRootPositionXZ = true;
@@ -188,7 +191,8 @@ namespace RingFighter.EditorTools
             AnimatorController existing = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
             bool wantMove = MoveClips.Any(c => clips.ContainsKey(c));
             bool hasMove = existing != null && existing.parameters.Any(p => p.name == "MoveX");
-            if (existing != null && existing.layers.Length > 0 && existing.layers[0].stateMachine.states.Length >= 6 && hasMove == wantMove)
+            bool current = existing != null && existing.parameters.Any(p => p.name == ControllerVersion);
+            if (existing != null && existing.layers.Length > 0 && existing.layers[0].stateMachine.states.Length >= 6 && hasMove == wantMove && current)
                 return existing;   // already built for this set of clips: keep it (and its GUID) as is
             if (existing != null) AssetDatabase.DeleteAsset(ControllerPath);
 
@@ -197,6 +201,7 @@ namespace RingFighter.EditorTools
             ac.AddParameter("Airborne", AnimatorControllerParameterType.Bool);
             ac.AddParameter("Charging", AnimatorControllerParameterType.Bool);
             ac.AddParameter("Hit", AnimatorControllerParameterType.Trigger);
+            ac.AddParameter(ControllerVersion, AnimatorControllerParameterType.Float);   // unused; marks this layout version
             if (wantMove)
             {
                 ac.AddParameter("MoveX", AnimatorControllerParameterType.Float);
@@ -218,32 +223,32 @@ namespace RingFighter.EditorTools
 
             // Charging glow: aim and shoot.
             AnimatorStateTransition t = idle.AddTransition(charge);
-            Instant(t, 0.1f);
+            Instant(t, 0.2f);
             t.AddCondition(AnimatorConditionMode.If, 0f, "Charging");
             t = charge.AddTransition(idle);
-            Instant(t, 0.15f);
+            Instant(t, 0.25f);
             t.AddCondition(AnimatorConditionMode.IfNot, 0f, "Charging");
 
             // Flinch when hit (not while flying or knocked out), then back to idle.
             t = sm.AddAnyStateTransition(hit);
-            Instant(t, 0.05f);
-            t.canTransitionToSelf = true;
+            Instant(t, 0.12f);
+            t.canTransitionToSelf = false;   // restarting a flinch mid-flinch looked like a stutter
             t.AddCondition(AnimatorConditionMode.If, 0f, "Hit");
             t.AddCondition(AnimatorConditionMode.If, 0f, "Alive");
             t.AddCondition(AnimatorConditionMode.IfNot, 0f, "Airborne");
             t = hit.AddTransition(idle);
             t.hasExitTime = true;
-            t.exitTime = 0.85f;
-            t.duration = 0.15f;
+            t.exitTime = 0.8f;
+            t.duration = 0.25f;
 
             // Lifted by the whirlwind.
             t = sm.AddAnyStateTransition(lifted);
-            Instant(t, 0.1f);
+            Instant(t, 0.15f);
             t.canTransitionToSelf = false;
             t.AddCondition(AnimatorConditionMode.If, 0f, "Airborne");
             t.AddCondition(AnimatorConditionMode.If, 0f, "Alive");
             t = lifted.AddTransition(idle);
-            Instant(t, 0.2f);
+            Instant(t, 0.3f);
             t.AddCondition(AnimatorConditionMode.IfNot, 0f, "Airborne");
 
             // Knocked out, then get up when it respawns.
@@ -256,14 +261,17 @@ namespace RingFighter.EditorTools
             t.AddCondition(AnimatorConditionMode.If, 0f, "Alive");
             t = getUp.AddTransition(idle);
             t.hasExitTime = true;
-            t.exitTime = 0.95f;
-            t.duration = 0.2f;
+            t.exitTime = 0.92f;
+            t.duration = 0.3f;
 
             EditorUtility.SetDirty(ac);
             return ac;
         }
 
         // Idle in the middle, a movement clip in each direction; Unity blends between them by MoveX / MoveZ.
+        // Bump when the controller layout or blend times change, so existing controllers get rebuilt.
+        private const string ControllerVersion = "_layout_v2";
+
         private static AnimatorState Locomotion(AnimatorController ac, AnimatorStateMachine sm, Dictionary<string, AnimationClip> clips)
         {
             BlendTree tree = new BlendTree();

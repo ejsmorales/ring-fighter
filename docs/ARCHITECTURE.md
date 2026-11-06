@@ -44,7 +44,7 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 | `EnergyBarVisual.cs` | The old floating energy bar over a hand. Not used by the scene any more (the HUD replaced it). |
 | `PlayerHealth.cs` | Player health, head and torso hit spheres, hit flash, knock-out and fight restart. `PlayerHealth.Instance`. |
 | `EnemyBolt.cs` | The dummy's yellow bolt (also: clashes with your projectiles via `ClashWith`, laser cuts via `CutAlong`): hits the player, is absorbed by a single shield (`ShieldMove.AbsorbHit`) or reflected by a double shield (`ShieldMove.Intercept` is the plane-crossing test). |
-| `PlayerMovement.cs` | Off-hand thumbstick movement: Dash (default), Smooth, Off; click the stick to cycle. Moves the rig (player root), clamped to an arena circle. Independent of the move system. |
+| `PlayerMovement.cs` | Snap turn on the ring-hand stick (45 degrees). Off-hand thumbstick movement: Dash (default), Smooth, Off; click the stick to cycle. Moves the rig (player root), clamped to an arena circle. Independent of the move system. |
 | `EnemyBrain.cs` | The opponent's decision making ("duelist"): keeps range and circles, dodges `Projectile.Spawned` shots, punishes openings (`TrainingDummy.HurryNextShot`), teleports to your flank (`TrainingDummy.BeginTeleport`). Sets `TrainingDummy.DesiredVelocity`; the dummy body does the moving, shooting and animation. |
 | `VFX/TeleportVfx.cs` | Teleport warning sparks and 3D sounds (reads `TrainingDummy.TeleportStarted` / `Teleported`). |
 | `EnemyAnimationDriver.cs` | Plays the enemy model's Animator from TrainingDummy state (Alive, Airborne, Charging bools; Hit trigger on `Damaged`) and points the dummy's muzzle at the right hand bone. Reads only. |

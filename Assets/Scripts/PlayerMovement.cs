@@ -45,6 +45,14 @@ namespace RingFighter
         [Tooltip("Ignore tiny stick movements below this (0-1).")]
         public float deadzone = 0.15f;
 
+        [Header("Turning (RING-hand stick)")]
+        [Tooltip("Flick the ring-hand stick left or right to turn this many degrees. 0 turns snap turning off.")]
+        public float snapTurnDegrees = 45f;
+        [Tooltip("How far the stick must be pushed sideways (0-1) to turn.")]
+        public float turnThreshold = 0.7f;
+        [Tooltip("The stick must come back inside this (0-1) before the next turn.")]
+        public float turnReset = 0.3f;
+
         [Header("Limits")]
         [Tooltip("The arena radius (meters) you can move out to from the middle. Stops you walking off or into the dummy.")]
         public float arenaRadius = 4f;
@@ -57,6 +65,7 @@ namespace RingFighter
         private bool flickHeld = true;     // a stick already pushed at launch doesn't count
         private bool clickWasHeld = true;
         private Vector3 startPosition;
+        private bool turnHeld = true;      // a stick already pushed at launch doesn't count
 
         private void Awake()
         {
@@ -74,7 +83,7 @@ namespace RingFighter
             string s = mode.ToString().ToUpper();
             if (mode == Mode.Dash && dashing) s += " (dashing)";
             else if (mode == Mode.Dash && Time.time < nextDashTime) s += " (cooldown)";
-            return s + "   (click off-hand stick to switch)";
+            return s + "   (click off-hand stick to switch; ring stick = turn)";
         }
 
         /// <summary>Back to the starting spot (used when the fight restarts).</summary>
@@ -108,6 +117,7 @@ namespace RingFighter
             }
 
             Vector2 stick = stickHand.Thumbstick;
+            SnapTurn();
 
             if (dashing)
             {
@@ -117,6 +127,34 @@ namespace RingFighter
 
             if (mode == Mode.Dash) TryDash(stick, stickHand);
             else if (mode == Mode.Smooth) Glide(stick);
+        }
+
+        // Ring-hand stick flicked left/right: turn the player in place (around the head, so the view doesn't swing).
+        private void SnapTurn()
+        {
+            if (snapTurnDegrees <= 0f || rig.head == null) return;
+            RingContext ctx = controller != null ? controller.Context : null;
+            TrackedNode turnHand = ctx != null ? ctx.RingHand : null;
+            if (turnHand == null || !turnHand.IsTracked) return;
+
+            float x = turnHand.Thumbstick.x;
+            if (Mathf.Abs(x) < turnReset)
+            {
+                turnHeld = false;
+                return;
+            }
+            if (turnHeld || Mathf.Abs(x) < turnThreshold) return;
+            turnHeld = true;
+
+            float angle = Mathf.Sign(x) * snapTurnDegrees;
+            rig.transform.RotateAround(rig.head.transform.position, Vector3.up, angle);
+            rig.transform.position = Clamp(rig.transform.position);
+            if (dashing)
+            {
+                dashing = false;   // a dash in progress would pull the view back; just stop it
+                nextDashTime = Time.time + dashCooldown;
+            }
+            MoveLog.Add("Snap turn " + (angle > 0f ? "right" : "left"));
         }
 
         private void CycleMode(TrackedNode hand)

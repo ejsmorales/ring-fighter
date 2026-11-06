@@ -244,3 +244,10 @@ Record each headset session here: date, build, what worked, what didn't.
   the real cause. Open: snap turn on the ring-hand stick; whirlwind vs a moving target (pull, homing, or he slows
   near it).
 
+- **2026-11-05 (later) — AI fixes build: "that was better".** Owner: use the right (ring-hand) stick to turn, since he
+  can still end up behind you if you turn your head; the villain's animation is "a little janky, stutters sometimes".
+  **Changes (untested):** snap turn 45 degrees on the ring-hand stick (around the head). Animation smoothing on our
+  side first: import with no keyframe compression and loop-pose blending, longer Animator blends, no flinch
+  self-restart (min 0.8 s between flinches), gradual floor-safeguard lift. If stutter remains, find out when it
+  happens; noisy clips themselves would go back to the art conversation.
+

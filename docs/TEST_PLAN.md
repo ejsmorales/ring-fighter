@@ -8,24 +8,34 @@ Before testing: press **Y** (left controller) to show the debug panel. Its "Rece
 something didn't. The top lines show the ring hand, focus distance and the physics self-test.
 (Everything in this build is untested: built in the cloud, not yet run on the headset.)
 
-## This build — enemy AI fixes (2026-11-05)
+## This build — snap turn + smoother enemy animation (2026-11-05, second build)
 
-Last build ("a little hectic"): he could teleport behind you (no quick way to turn); he sometimes sank half into the
-floor; the teleport was too quick with no hint of where he'd appear; his erratic movement made the whirlwind hard to
-use. Changes: reappears only 35-55 degrees to your side and never more than 60 degrees from where you face (if that
-spot is outside the arena he tries closer/other side, else skips the teleport); warning is longer (1.1 s) and a
-**yellow ring + rising column of light appears at the destination**, with the warning sound coming from there;
-calmer pace (circles slower, changes direction less often, pauses more, teleports every 15-25 s); a floor safeguard
-lifts his model if an animation pushes his feet into the floor, and logs which animation did it. Untested.
+Last build was "better". New: **snap turn** on the RING-hand stick (flick left/right = turn 45 degrees around your
+head). Smoother enemy animation: no keyframe compression, loop seams blended, longer blends between animations, a
+flinch can no longer restart itself (flinch at most every 0.8 s), and the floor safeguard raises him gradually
+instead of in one jump. Untested.
+
+This build re-imports the enemy art once (import settings changed) and rebuilds his Animator controller, so the first
+build takes a little longer and afterwards `git status` shows changed files under `Assets/Art/Enemy` (the `.meta`
+files and `Enemy01.controller`). **Commit those** (see the bottom of this section).
 
 | # | Do this | Expected | Panel shows |
 | --- | --- | --- | --- |
-| T1 | Wait for a teleport (15-25 s) | He flickers for about a second; at the same time a yellow ring and column of light grow on the floor where he'll appear, and the rising sound comes from that side | `Dummy teleports (timer)` |
-| T2 | Watch where he reappears, several times | Always in your side vision, left or right, never behind you; then a quick bolt | `Dummy quick-fires after teleporting` |
-| T3 | Stand near the edge of the arena facing outward and wait | He still only appears to your sides or front, or skips the teleport | — |
-| T4 | Play a few minutes and watch his feet | He never sinks into the floor. If a line `Enemy sank 0.xx m (StateName) - corrected` appears on the panel, tell Claude the state name (that's the animation causing it) | `Enemy sank ...` (report it) |
-| T5 | Overall pace | Calmer than last build: still circles and dodges, but less erratic | `Enemy: circling` / `watching` |
-| T6 | Try the whirlwind on him again | Report whether it's usable now (it is unchanged; see the options Claude gave) | Report |
+| T1 | Flick the RING-hand stick right | You turn 45 degrees right instantly; your position doesn't jump | `Snap turn right` |
+| T2 | Flick left, then hold the stick to the side | One 45-degree turn per flick; holding doesn't keep turning | `Snap turn left` |
+| T3 | Off-hand stick | Still moves you (dash/smooth) as before; stick click still switches mode | `Move: ...` |
+| T4 | Snap turn while dashing | Dash stops, turn happens, no jump | — |
+| T5 | Watch his idle and aiming for a while | Smooth, no pop at the loop point | — |
+| T6 | Hit him repeatedly / hold the laser on him | He flinches smoothly, not a rapid restart stutter | — |
+| T7 | Watch for any remaining stutter | If you still see it, note **when** (idle? walking/sliding? turning to face you? after a teleport? when hit?) and tell Claude | Report |
+| T8 | Floor | Still never sinks; any `Enemy sank ... (State)` line -> tell Claude the state | `Enemy sank ...` |
+
+After testing, commit the re-imported art settings:
+```
+git add Assets/Art
+git commit -m "Enemy art: re-imported with smoother animation settings"
+git push
+```
 
 ## Regression (every build)
 
@@ -45,6 +55,7 @@ lifts his model if an animation pushes his feet into the floor, and logs which a
 | R12 | Pause with the left menu button | Freezes and resumes (works as of 2026-10-19) |
 | R13 | Off-hand stick movement | Dash and Smooth both work (pass as of 2026-10-19) |
 | R14 | Bolt clashes, laser cuts bolts, headshots both ways, orange head-aimed shots | Passed 2026-10-20 |
+| R20 | Enemy teleport: warning + destination marker, appears only to your sides | Passed 2026-11-05 ("better") |
 | R19 | Enemy AI basics: keeps distance and circles, dodges some shots, punishes openings, escapes your blast by teleporting | Passed 2026-11-05 ("hectic") |
 | R18 | Player Platform disc gone (pass/fail not reported yet) | — |
 | R17 | Enemy01 animations: idle, aim/shoot from the right hand, flinch, lifted, knocked out, get up (no shooting while getting up) | Passed 2026-10-21 |

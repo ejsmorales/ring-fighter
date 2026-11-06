@@ -298,4 +298,6 @@ Record each headset session here: date, build, what worked, what didn't.
   - **Audio decisions:** start with sounds synthesized in code to find the feel, then decide on real sounds (AI-made,
     free libraries, or the owner's own recordings). First priority: ring attacks (done, `SfxSynth` + `RingAudio`).
     Music style wanted: "a Mega Man level or fighting game" (chiptune fits code synthesis; next).
+  - First sound build: **no sounds at all** on the headset (build did include RingAudio; AudioManager not disabled).
+    Added an audio status line and a 2D test chime on ring-hand pick to tell "no audio output" from "3D sounds fail".
 

@@ -52,6 +52,12 @@ namespace RingFighter
             rechargeSrc = Loop("Recharge Chord", SfxSynth.RechargeLoop);
             windSrc.maxDistance = 40f;
 
+            // Diagnostics (shown in the debug panel's Recent list and in adb logcat).
+            AudioConfiguration cfg = AudioSettings.GetConfiguration();
+            int listeners = FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length;
+            MoveLog.Add("Audio: " + AudioSettings.outputSampleRate + " Hz, " + cfg.speakerMode + ", listeners " + listeners
+                        + (AudioListener.pause ? ", PAUSED" : "") + ", volume " + AudioListener.volume.ToString("0.0"));
+
             Projectile.Spawned += OnShot;
             Projectile.Ended += OnShotEnded;
             if (shield != null) shield.BoltBlocked += OnBlocked;
@@ -109,10 +115,31 @@ namespace RingFighter
 
         // ---- Loops ----
 
+        private bool chimed;
+
+        // A plain (non-3D) chime when the ring hand is picked: if you hear this but not the move sounds, the problem is
+        // the 3D sound; if you hear nothing at all, the app's audio output isn't working.
+        private void PlayTestChime()
+        {
+            GameObject go = new GameObject("Audio Test Chime");
+            AudioSource s = go.AddComponent<AudioSource>();
+            s.clip = SfxSynth.Block;
+            s.spatialBlend = 0f;
+            s.volume = 0.8f;
+            s.Play();
+            Destroy(go, 1f);
+            MoveLog.Add("Audio: test chime played (you should hear a clang)");
+        }
+
         private void Update()
         {
             RingContext ctx = controller.Context;
             TrackedNode ring = ctx != null ? ctx.RingHand : null;
+            if (!chimed && ring != null)
+            {
+                chimed = true;
+                PlayTestChime();
+            }
             Vector3 handPos = ring != null ? ring.transform.position : transform.position;
 
             Fade(laserSrc, laser != null && laser.IsActive, handPos, laserVolume, 1f + 0.03f * Mathf.Sin(Time.time * 7f));

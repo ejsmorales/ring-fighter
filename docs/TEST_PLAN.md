@@ -30,6 +30,7 @@ repeats with tints. Untested.
 | T8 | Start the game and walk away from the start spot | No green ring/glow left on the floor where you started (it was the whirlwind effect, built but never hidden until the first whirlwind) | — |
 | T9 | Laser, charged blast, whirlwind | Their effects still appear and disappear normally | — |
 | T10 | Recharge stance | The ring shines (green glow), no upward beam | `Recharging` |
+| T10b | **Sound check:** pick the ring hand | A clang plays right away (plain stereo). Panel Recent list shows `Audio: 48000 Hz, Stereo, listeners 1, volume 1.0` (numbers may differ) and `Audio: test chime played` | Report what you hear and the Audio line |
 | T11 | Fire single bolts | A quick falling "pew" from your hand each shot | — |
 | T12 | Hold the laser | A buzzing hum while the beam is on, fading out when it stops | — |
 | T13 | Charge and release a blast | Pulsing tone that rises in pitch as it charges; deep "whoomp" when fired; rumbling boom where it lands | — |

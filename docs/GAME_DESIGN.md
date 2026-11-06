@@ -281,4 +281,8 @@ Record each headset session here: date, build, what worked, what didn't.
   floor (nothing blocks shots); props made with Meshy (owner's paid plan) in the art conversation, original names, no
   real brands; layout, floor, lines, curbs, sky, haze and hills built in code by `Assets/Editor/ArenaBuilder.cs`;
   each prop has a placeholder until its Meshy model exists (`EnvironmentArtSetup`). Untested.
+  - All 14 props delivered (art conversation): Meshy made the four vehicles and the palm; shrub, street tree, light
+    pole, store front, watch tower, stop sign, cart, corral and hillside town were built procedurally (Meshy gave
+    see-through leaves and can't do hard-surface/sign shapes well). Fixes on our side: corral expected height 2.15 m
+    (its sign), double-sided vegetation materials, hillside backdrop at z 205 with code houses skipped ahead.
 

@@ -133,6 +133,12 @@ namespace RingFighter.EditorTools
             {
                 m.SetFloat("_Smoothness", 0.25f);
             }
+            // Leaves and fronds are single sheets: draw both sides ("Render Face: Both").
+            if (name == "Env_PalmTree" || name == "Env_StreetTree" || name == "Env_Shrub")
+            {
+                if (m.HasProperty("_Cull")) m.SetFloat("_Cull", 0f);
+                m.doubleSidedGI = true;
+            }
             EditorUtility.SetDirty(m);
             return m;
         }

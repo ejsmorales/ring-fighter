@@ -244,12 +244,14 @@ namespace RingFighter.EditorTools
             }
             AddMesh("Hills", hills, Lit("RF_Env_Hills", new Color(0.3f, 0.42f, 0.22f), 0f));
 
-            // Little houses on the slopes (only where the stores don't hide them much: all around, denser ahead).
+            // Little houses on the slopes all around, except straight ahead when the Meshy hillside town is there.
+            bool backdrop = EnvironmentArtSetup.Get("Env_HillsideTown") != null;
             MeshBuilder[] houses = { new MeshBuilder(), new MeshBuilder(), new MeshBuilder(), new MeshBuilder() };
             for (int i = 0; i < 420; i++)
             {
                 float a = Rand(0f, 360f);
                 float dist = Rand(170f, 235f);
+                if (backdrop && Mathf.DeltaAngle(a, 0f) > -50f && Mathf.DeltaAngle(a, 0f) < 50f) continue;
                 Vector3 p = HillPoint(a, dist);
                 Vector3 size = new Vector3(Rand(4f, 8f), Rand(3f, 5.5f), Rand(4f, 7f));
                 MeshBuilder mb = houses[rng.Next(houses.Length)];
@@ -261,8 +263,8 @@ namespace RingFighter.EditorTools
             AddMesh("Houses Yellow", houses[3], Lit("RF_Env_HouseYellow", new Color(0.9f, 0.82f, 0.5f), 0.1f));
 
             // Meshy backdrop if available: straight ahead behind the stores, facing the player.
-            if (EnvironmentArtSetup.Get("Env_HillsideTown") != null)
-                Spawn("Env_HillsideTown", new Vector3(0f, 0f, 190f), 180f, null);
+            if (backdrop)
+                Spawn("Env_HillsideTown", new Vector3(0f, 0f, 205f), 180f, null);   // 260 m wide, ~70 m deep
         }
 
         private static Vector3 HillPoint(float angleDeg, float radius)
@@ -350,7 +352,7 @@ namespace RingFighter.EditorTools
             {
                 case "Env_Sedan": expected = 1.45f; break;
                 case "Env_SUV": expected = 1.75f; break;
-                case "Env_Van": expected = 2.2f; break;
+                case "Env_Van": expected = 2.6f; break;
                 case "Env_WreckedCar": expected = 1.2f; break;
                 case "Env_LightPole": expected = 10f; break;
                 case "Env_PalmTree": expected = 6f; break;
@@ -359,7 +361,7 @@ namespace RingFighter.EditorTools
                 case "Env_WatchTower": expected = 6f; break;
                 case "Env_StopSign": expected = 2.5f; break;
                 case "Env_ShoppingCart": expected = 1f; break;
-                case "Env_CartCorral": expected = 1.1f; break;
+                case "Env_CartCorral": expected = 2.15f; break;   // includes its CART RETURN sign
                 case "Env_StoreFront": expected = 10f; break;
                 default: return;
             }

@@ -29,7 +29,18 @@ Includes everything from `claude/enemy-ai`. Untested.
 | T7 | Performance | Smooth, no stutter when turning (watch for hitches looking toward the stores and hills) | Report |
 | T8 | Look | Too dark/bright? Haze too strong? Does it feel like the photo? | Report |
 
-When Meshy props are added: build again, check each prop's size, that it faces the right way and sits on the
+**All 14 props have arrived** (art conversation, 2026-11-06), so this first build already uses them instead of the
+placeholders. Extra checks for the props:
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| T9 | Look at the parked cars | Sedans, SUVs and white vans in different paint colors, sitting on the ground, facing along the stalls, no logos |
+| T10 | Palm trees | Fronds visible from below and above (not see-through from one side) |
+| T11 | Store fronts ahead | "PLAZA SOL MARKET" facing you behind the sidewalk (the same front is used three times; side ones tinted) |
+| T12 | Watch tower, stop sign, cart corral ("CART RETURN"), carts, wrecked car | All right-side up, normal size, standing on the ground |
+| T13 | Far hills ahead | The hillside-town backdrop behind the stores, blending into the code-built hills on the sides |
+
+When more Meshy props are added later: build again, check each prop's size, that it faces the right way and sits on the
 ground (the build log lists `RingFighter arena: using prop ...` and any auto-scaling), then commit
 `Assets/Art/Environment` (Git LFS handles the `.fbx`/`.png`).
 

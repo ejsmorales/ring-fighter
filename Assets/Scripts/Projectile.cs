@@ -89,7 +89,7 @@ namespace RingFighter
             if (physHit)
             {
                 IDamageable target = hit.collider.GetComponentInParent<IDamageable>();
-                if (target != null && target.IsAlive)
+                if (target != null && target.IsTargetable)
                 {
                     target.TakeDamage(damage, hit.point, dir * knockback);
                     MoveLog.Add("HIT " + hit.collider.name + " for " + Mathf.RoundToInt(damage));

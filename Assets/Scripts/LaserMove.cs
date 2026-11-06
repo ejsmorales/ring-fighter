@@ -261,7 +261,7 @@ namespace RingFighter
                 end = hit.point;
                 hitPoint = hit.point;
                 IDamageable t = hit.collider.GetComponentInParent<IDamageable>();
-                if (t != null && t.IsAlive)
+                if (t != null && t.IsTargetable)
                 {
                     target = t;
                     hitName = hit.collider.name;

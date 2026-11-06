@@ -309,14 +309,16 @@ namespace RingFighter
             if (!ok) return false;   // nowhere good (you're at the very edge): skip this teleport
             dest.y = me.y;
 
-            if (!dummy.BeginTeleport(dest)) return false;
+            bool evade = reason != "timer";
+            if (!dummy.BeginTeleport(dest, !evade)) return false;
+            if (evade) Impact.Label(dummy.ChestPoint + Vector3.up * 0.6f, "EVADE", new Color(1f, 0.85f, 0.3f), dummy.lookTarget, 0.18f);
             lastTeleport = Time.time;
             nextTeleport = Time.time + Random.Range(teleportEvery.x, teleportEvery.y);
             recentDamage.Clear();
             velocity = Vector3.zero;
             dummy.DesiredVelocity = Vector3.zero;
             State = "TELEPORTING";
-            MoveLog.Add("Dummy teleports (" + reason + ")");
+            MoveLog.Add(evade ? "Dummy EVADES (" + reason + "): untouchable while flickering, no counter-shot" : "Dummy teleports (timer)");
             return true;
         }
 

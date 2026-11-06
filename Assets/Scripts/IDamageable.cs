@@ -9,6 +9,8 @@ namespace RingFighter
     public interface IDamageable
     {
         bool IsAlive { get; }
+        /// <summary>False while attacks pass through it (knocked out, or the enemy's evade/teleport flicker).</summary>
+        bool IsTargetable { get; }
         void TakeDamage(float amount, Vector3 point, Vector3 force);
         void TakeDamage(float amount, Vector3 point, Vector3 force, DamageKind kind);
 

@@ -263,4 +263,10 @@ Record each headset session here: date, build, what worked, what didn't.
   seemed to become immune after several hits (owner: fine, but show an indicator). No immunity exists in code
   (only while knocked out); likely dodges, escape teleports or bolt clashes. **Changes (untested):** recharge start
   height lowered to forehead level, debug panel `Recharge:` status line and a hint log, floating DODGE label.
+  - Owner clarified the "immunity": with the laser/bolts he blinked translucent and attacks went through, then he was
+    solid again. That was the escape teleport (35+ damage in 2 s; the laser does that in about 1 s). Owner read it as
+    an anti-spam mechanic and liked that, wanting it obvious and without him attacking right after being pummeled.
+    **Made it a real "evade":** untouchable during the flicker (colliders off, hit shapes and aim assist skip him),
+    EVADE label, and after an evade he waits a full attack interval instead of the quick counter-shot. The timed
+    teleport keeps its quick shot.
 

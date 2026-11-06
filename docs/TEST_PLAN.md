@@ -8,7 +8,7 @@ Before testing: press **Y** (left controller) to show the debug panel. Its "Rece
 something didn't. The top lines show the ring hand, focus distance and the physics self-test.
 (Everything in this build is untested: built in the cloud, not yet run on the headset.)
 
-## This build — recharge made easier to trigger and see; DODGE label (2026-11-06)
+## This build — recharge made easier to trigger and see; DODGE label; EVADE mechanic (2026-11-06)
 
 Last build: the recharge stance never triggered; the enemy seemed to become "immune" after several hits. There is
 no immunity in the code: hits only stop counting while he is knocked out. Likely causes of "immune": he sidesteps
@@ -16,7 +16,9 @@ no immunity in the code: hits only stop counting while he is knocked out. Likely
 bolt and both cancel (dark burst). Changes: recharge starts with the ring hand at forehead height or higher (was
 5 cm above the head) and stays on down to 25 cm below head height; a `Recharge:` line on the debug panel shows
 both grip pressures and the ring hand's height, and a hint appears if the grips are held but the hand is too low;
-a floating **DODGE** appears over him when he sidesteps. Untested.
+a floating **DODGE** appears over him when he sidesteps. The "immunity" the owner saw with the laser was the escape
+teleport's flicker; it is now a deliberate **EVADE**: after 35+ damage in 2 s (or when you charge a blast) he shows
+EVADE, is untouchable while flickering, reappears to your side and does not counter-shoot right away. Untested.
 
 **The recharge motion:** squeeze and hold the **grip** buttons (the side buttons under your middle fingers) on
 **both** controllers, then raise the ring hand straight up over your head, like holding the ring to the sky. The
@@ -28,7 +30,11 @@ off hand can stay anywhere.
 | T2 | Keep squeezing, raise the ring hand overhead | Charging starts: green glow and column at the ring, energy fills fast | `Recharging`, `CHARGING` on the Recharge line |
 | T3 | If T2 doesn't start | Read the Recharge line: which grip is under 0.7, or what height is shown, and tell Claude | Report the line |
 | T4 | Fire bolts at him until he sidesteps | Yellow DODGE word floats over him each time he dodges | `Dummy dodges` |
-| T5 | When he seems "immune" again, read the Recent list | Look for `Dummy dodges`, `Dummy teleports (escaping damage)`, or `Bolts cancelled`. Tell Claude which (or none) | Report |
+| T5 | Hold the laser on him (or rapid-fire bolts) for about a second | **EVADE** floats over him, he flickers and your attacks pass through him during the flicker, then he reappears to your side (marker shows where) and does **not** shoot right away (waits ~3 s) | `Dummy EVADES (escaping damage): untouchable while flickering, no counter-shot` |
+| T6 | Start charging a blast | Same evade (EVADE label, no counter-shot) | `Dummy EVADES (escaping your blast)...` |
+| T7 | Wait for a timed teleport (15-25 s, no heavy damage) | No EVADE label; he reappears and fires the quick shot as before | `Dummy teleports (timer)`, `Dummy quick-fires after teleporting` |
+| T8 | Shoot him while he flickers (either kind of teleport) | Shots and laser pass through (no damage, no hit number) | — |
+| T9 | Does EVADE make it clear to switch it up? Is the 35-damage-in-2-s trigger too sensitive with the laser? | Report | — |
 
 ## Regression (every build)
 

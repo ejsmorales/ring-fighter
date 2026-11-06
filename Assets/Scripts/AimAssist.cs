@@ -40,7 +40,7 @@ namespace RingFighter
             for (int i = 0; i < targets.Count; i++)
             {
                 Entry e = targets[i];
-                if (e.point == null || e.owner == null || !e.owner.IsAlive) continue;
+                if (e.point == null || e.owner == null || !e.owner.IsTargetable) continue;
                 Vector3 to = e.point.position - origin;
                 if (to.sqrMagnitude < 0.01f) continue;
                 float angle = Vector3.Angle(direction, to);

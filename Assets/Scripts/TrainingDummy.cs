@@ -121,6 +121,8 @@ namespace RingFighter
         /// <summary>Height of the arena floor under him (his starting height).</summary>
         public float FloorHeight { get { return home.y; } }
         public bool IsTeleporting { get { return teleport != Teleport.None; } }
+        /// <summary>Attacks pass through him while knocked out and during the teleport/evade flicker.</summary>
+        public bool IsTargetable { get { return IsAlive && teleport == Teleport.None; } }
         /// <summary>True when he is free to move, dodge, shoot or teleport.</summary>
         public bool CanAct { get { return IsAlive && air == Air.Grounded && !IsGettingUp && teleport == Teleport.None; } }
 
@@ -165,6 +167,7 @@ namespace RingFighter
         private float teleportUntil;
         private Vector3 teleportTo;
         private bool quickShot;
+        private bool teleportQuickShot = true;
         private float activeChargeTime;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
@@ -350,11 +353,16 @@ namespace RingFighter
             return true;
         }
 
-        /// <summary>Start the teleport: flicker in place, vanish, reappear at 'destination', then a quick shot.</summary>
-        public bool BeginTeleport(Vector3 destination)
+        /// <summary>
+        /// Start the teleport: flicker in place (untouchable), vanish, reappear at 'destination'. With 'quickShot' he
+        /// fires a fast bolt right after reappearing; without it (an evade) he waits a full attack interval instead.
+        /// </summary>
+        public bool BeginTeleport(Vector3 destination, bool withQuickShot = true)
         {
             if (!CanAct) return false;
             teleport = Teleport.Shimmer;
+            teleportQuickShot = withQuickShot;
+            SetCollidersEnabled(false);   // attacks pass through during the flicker
             teleportUntil = Time.time + teleportShimmerTime;
             destination.y = home.y;
             teleportTo = destination;
@@ -390,16 +398,28 @@ namespace RingFighter
                     toPlayer.y = 0f;
                     if (toPlayer.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(toPlayer);
                 }
-                // Quick shot from the new spot.
+                SetCollidersEnabled(true);
                 wasFighting = true;
-                quickShot = true;
-                activeChargeTime = teleportShotCharge;
-                nextFireTime = Time.time + teleportShotCharge;
+                if (teleportQuickShot)
+                {
+                    // Quick shot from the new spot.
+                    quickShot = true;
+                    activeChargeTime = teleportShotCharge;
+                    nextFireTime = Time.time + teleportShotCharge;
+                }
+                else
+                {
+                    // Evade: regroup before shooting again.
+                    quickShot = false;
+                    activeChargeTime = chargeTime;
+                    nextFireTime = Time.time + attackInterval;
+                }
             }
         }
 
         private void CancelTeleport()
         {
+            if (teleport != Teleport.None && IsAlive) SetCollidersEnabled(true);
             teleport = Teleport.None;
             quickShot = false;
             activeChargeTime = chargeTime;
@@ -445,7 +465,7 @@ namespace RingFighter
 
         public void TakeDamage(float amount, Vector3 point, Vector3 force, DamageKind kind)
         {
-            if (!IsAlive) return;
+            if (!IsTargetable) return;
 
             // Direct hits to the head do extra.
             bool headshot = kind == DamageKind.Direct && point.y - transform.position.y >= headMinHeight;

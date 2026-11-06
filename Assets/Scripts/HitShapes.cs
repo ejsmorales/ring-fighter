@@ -45,7 +45,7 @@ namespace RingFighter
             for (int i = 0; i < entries.Count; i++)
             {
                 Entry e = entries[i];
-                if (e.root == null || e.owner == null || !e.owner.IsAlive) continue;
+                if (e.root == null || e.owner == null || !e.owner.IsTargetable) continue;
                 Vector3 bottom, top;
                 Axis(e, out bottom, out top);
 
@@ -69,7 +69,7 @@ namespace RingFighter
             for (int i = 0; i < entries.Count; i++)
             {
                 Entry e = entries[i];
-                if (e.root == null || e.owner == null || !e.owner.IsAlive || results.Contains(e.owner)) continue;
+                if (e.root == null || e.owner == null || !e.owner.IsTargetable || results.Contains(e.owner)) continue;
                 Vector3 bottom, top;
                 Axis(e, out bottom, out top);
                 Vector3 onAxis = ClosestOnSegment(bottom, top, center);

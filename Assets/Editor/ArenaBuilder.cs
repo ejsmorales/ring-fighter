@@ -23,11 +23,12 @@ namespace RingFighter.EditorTools
 
         // Layout (meters). The fight happens inside FightRadius.
         private const float FightRadius = 11f;
-        private const float RowNear = 16f;     // first parking row starts here (north and south)
+        private const float RowNear = 20f;     // first parking row starts here (north and south)
         private const float RowDepth = 5f;     // stall depth
         private const float RowHalfWidth = 33f;
-        private const float SideRowNear = 16f; // east/west rows
-        private const float StoreFrontZ = 40f;
+        private const float SideRowNear = 22f; // east/west rows
+        private const float StoreFrontZ = 44f;
+        private static readonly Vector3 WreckPos = new Vector3(-12.5f, 0f, -22.5f);   // crashed into the south row
 
         private static System.Random rng;
         private static Transform root;
@@ -137,13 +138,13 @@ namespace RingFighter.EditorTools
             {
                 float x0 = sign * SideRowNear;
                 float x1 = sign * (SideRowNear + RowDepth);
-                StallLinesAlongX(lines, curbs, x0, x1, -12f, 12f, 8, sign);
-                Island(curbs, grass, Mathf.Min(x1, x1 + sign * 2.5f), Mathf.Max(x1, x1 + sign * 2.5f), -12f, 12f, -8f, 8f);
+                StallLinesAlongX(lines, curbs, x0, x1, -16f, 16f, 10, sign);
+                Island(curbs, grass, Mathf.Min(x1, x1 + sign * 2.5f), Mathf.Max(x1, x1 + sign * 2.5f), -16f, 16f, -10f, 10f);
             }
 
             // Sidewalk with a yellow curb in front of the stores.
-            concrete.Box(new Vector3(0f, 0.075f, StoreFrontZ - 2f), new Vector3(130f, 0.15f, 4f));
-            curbs.Box(new Vector3(0f, 0.08f, StoreFrontZ - 4.05f), new Vector3(130f, 0.16f, 0.15f));
+            concrete.Box(new Vector3(0f, 0.075f, StoreFrontZ - 2f), new Vector3(170f, 0.15f, 4f));
+            curbs.Box(new Vector3(0f, 0.08f, StoreFrontZ - 4.05f), new Vector3(170f, 0.16f, 0.15f));
             // Crosswalk stripes toward the entrance.
             for (int i = 0; i < 8; i++)
                 lines.FlatQuad(new Vector3(-3.5f + i, 0.012f, StoreFrontZ - 7f), new Vector2(0.45f, 5f), "White");
@@ -280,26 +281,62 @@ namespace RingFighter.EditorTools
 
         private static void PlaceProps()
         {
-            // Store fronts straight ahead.
-            Spawn("Env_StoreFront", new Vector3(0f, 0f, StoreFrontZ), 180f, null, true);
-            Spawn("Env_StoreFront", new Vector3(-44f, 0f, StoreFrontZ), 180f, new Color(0.92f, 0.86f, 0.8f), true);
-            Spawn("Env_StoreFront", new Vector3(44f, 0f, StoreFrontZ), 180f, new Color(0.85f, 0.88f, 0.92f), true);
+            PlaceStores();
 
             // (Light poles are placed by the islands.)
 
             // Drive-lane details like the photo.
-            Spawn("Env_WatchTower", new Vector3(-7f, 0f, 31f), 160f, null);
-            Spawn("Env_StopSign", new Vector3(37f, 0f, 30f), -90f, null);
-            Spawn("Env_CartCorral", new Vector3(13f, 0f, 29f), 0f, null);
-            Spawn("Env_ShoppingCart", new Vector3(14.2f, 0f, 27f), 15f, null);
-            Spawn("Env_ShoppingCart", new Vector3(-13f, 0f, 12.5f), 120f, null);
+            Spawn("Env_WatchTower", new Vector3(-7f, 0f, 35f), 160f, null);
+            Spawn("Env_StopSign", new Vector3(37f, 0f, 34f), -90f, null);
+            Spawn("Env_CartCorral", new Vector3(13f, 0f, 33.5f), 0f, null);
+            Spawn("Env_ShoppingCart", new Vector3(14.2f, 0f, 31.5f), 15f, null);
+            Spawn("Env_ShoppingCart", new Vector3(-24.5f, 0f, 17.5f), 120f, null);
 
-            // Signs of the fight: a wrecked car just outside the fighting area.
-            Spawn("Env_WreckedCar", new Vector3(-9f, 0f, -9.5f), 35f, null);
+            // Signs of the fight: a wrecked car knocked into the south row.
+            Spawn("Env_WreckedCar", WreckPos, 35f, null);
+        }
+
+        // Store fronts in a strip ahead, side by side by their real widths. Uses every variant that exists
+        // (Env_StoreFront, Env_StoreFront_B ... _F); if there are too few to fill the strip, repeats them tinted.
+        private static void PlaceStores()
+        {
+            List<string> kinds = new List<string> { "Env_StoreFront" };
+            foreach (string v in new[] { "B", "C", "D", "E", "F" })
+                if (EnvironmentArtSetup.Get("Env_StoreFront_" + v) != null) kinds.Add("Env_StoreFront_" + v);
+
+            Color[] shades = { new Color(0.92f, 0.86f, 0.8f), new Color(0.85f, 0.88f, 0.92f), new Color(0.9f, 0.9f, 0.84f) };
+            const float stripWidth = 150f, gap = 1.5f;
+            List<GameObject> stores = new List<GameObject>();
+            List<float> widths = new List<float>();
+            float total = 0f;
+            for (int i = 0; total < stripWidth && i < 12; i++)
+            {
+                string kind = kinds[i % kinds.Count];
+                int round = i / kinds.Count;
+                Color? shade = round == 0 ? (Color?)null : shades[(round - 1) % shades.Length];
+                GameObject go = Spawn(kind, Vector3.zero, 180f, shade, false, shade.HasValue ? "Shade" + round : null);
+                Bounds b;
+                float w = TryBounds(go, out b) ? b.size.x : 40f;
+                stores.Add(go);
+                widths.Add(w);
+                total += w + gap;
+            }
+            if (kinds.Count == 1) Debug.Log("RingFighter arena: only one store front design, repeated with tints. Add Env_StoreFront_B, _C... for variety.");
+
+            float x = -total * 0.5f;
+            for (int i = 0; i < stores.Count; i++)
+            {
+                GameObject go = stores[i];
+                go.transform.position = new Vector3(x + widths[i] * 0.5f, 0f, StoreFrontZ);
+                Bounds b;
+                if (TryBounds(go, out b)) go.transform.position += Vector3.forward * (StoreFrontZ - b.min.z);
+                x += widths[i] + gap;
+            }
         }
 
         private static void ParkedCar(Vector3 pos, float yaw)
         {
+            if ((pos - WreckPos).magnitude < 3.5f) return;   // the wreck took this spot
             if (rng.NextDouble() > 0.62) return;   // empty stall
             double roll = rng.NextDouble();
             string type = roll < 0.55 ? "Env_Sedan" : (roll < 0.9 ? "Env_SUV" : "Env_Van");
@@ -310,7 +347,7 @@ namespace RingFighter.EditorTools
         }
 
         // Places the Meshy prop if present, else a placeholder. 'alignFront' moves a store front so its face sits at pos.z.
-        private static void Spawn(string name, Vector3 pos, float yaw, Color? tint, bool alignFront = false, string tintName = null)
+        private static GameObject Spawn(string name, Vector3 pos, float yaw, Color? tint, bool alignFront = false, string tintName = null)
         {
             EnvironmentArtSetup.Prop prop = EnvironmentArtSetup.Get(name);
             GameObject go;
@@ -342,6 +379,7 @@ namespace RingFighter.EditorTools
                 Bounds b;
                 if (TryBounds(go, out b)) go.transform.position += Vector3.forward * (pos.z - b.min.z);
             }
+            return go;
         }
 
         // Meshy sizes can come out in odd units; scale anything far from its expected height.

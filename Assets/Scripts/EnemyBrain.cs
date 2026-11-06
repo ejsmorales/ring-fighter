@@ -150,7 +150,7 @@ namespace RingFighter
             side.Normalize();
             if (Random.value < 0.5f) side = -side;
             Vector3 landing = dummy.GroundPosition + side * dodgeDistance;
-            if (new Vector2(landing.x, landing.z).magnitude > dummy.arenaRadius - 0.5f) side = -side;   // don't dodge into the edge
+            if (!dummy.InsideArena(landing, 0.5f)) side = -side;   // don't dodge into the edge
 
             dodgeDir = side;
             dodgeStartAt = Time.time + dodgeReaction;
@@ -224,10 +224,9 @@ namespace RingFighter
             Vector3 desired = away * radial + tangent * (paused ? 0f : circleSpeed);
 
             // Near the edge of the arena: turn around instead of pressing into it.
-            Vector2 flat = new Vector2(me.x, me.z);
-            if (flat.magnitude > dummy.arenaRadius - 1f)
+            Vector3 outward = dummy.OutwardNearEdge(me, 1f);
+            if (outward != Vector3.zero)
             {
-                Vector3 outward = new Vector3(me.x, 0f, me.z).normalized;
                 if (Vector3.Dot(tangent, outward) > 0f) circleDir = -circleDir;
                 float outwardSpeed = Vector3.Dot(desired, outward);
                 if (outwardSpeed > 0f) desired -= outward * outwardSpeed;
@@ -297,7 +296,7 @@ namespace RingFighter
                 float angle = baseAngle * angleScale[attempt] * side;
                 Vector3 candidate = playerPos + Quaternion.Euler(0f, angle, 0f) * facing * (preferredDistance * distScale[attempt]);
                 Vector3 offset = candidate - playerPos;
-                bool inside = new Vector2(candidate.x, candidate.z).magnitude <= dummy.arenaRadius - 0.5f;
+                bool inside = dummy.InsideArena(candidate, 0.5f);
                 bool inView = Vector3.Angle(facing, offset) <= maxReappearAngle;
                 if (inside && inView)
                 {

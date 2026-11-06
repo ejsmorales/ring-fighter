@@ -286,3 +286,9 @@ Record each headset session here: date, build, what worked, what didn't.
     see-through leaves and can't do hard-surface/sign shapes well). Fixes on our side: corral expected height 2.15 m
     (its sign), double-sided vegetation materials, hillside backdrop at z 205 with code houses skipped ahead.
 
+- **2026-11-06 (evening) — arena with all props: "worked as expected"** (recharge stance too). Notes: (1) the same
+  store building over and over, variety would help; (2) the map looks big but feels small because you can't get near
+  the cars. **Changes (untested):** play area is now the whole open lot, rectangular, up to the car bumpers (player
+  half-size 21 x 19 m, enemy 20 x 18 m; rows pushed out to 20/22 m); store fronts laid out by width using every
+  `Env_StoreFront[_B.._F]` design available; new store designs requested from the art conversation.
+

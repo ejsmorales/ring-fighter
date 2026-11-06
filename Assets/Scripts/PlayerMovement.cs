@@ -54,8 +54,8 @@ namespace RingFighter
         public float turnReset = 0.3f;
 
         [Header("Limits")]
-        [Tooltip("The arena radius (meters) you can move out to from the middle. Stops you walking off or into the dummy.")]
-        public float arenaRadius = 4f;
+        [Tooltip("Half the size (meters, X and Z) of the open area you can move in: right up to the parked cars.")]
+        public Vector2 arenaHalfSize = new Vector2(21f, 19f);
 
         private bool dashing;
         private float dashStart;
@@ -234,16 +234,11 @@ namespace RingFighter
             rig.transform.position = Clamp(p);
         }
 
-        // Keeps the rig inside the arena circle (around the world origin).
+        // Keeps the rig inside the open area of the lot (up to the parked cars' bumpers).
         private Vector3 Clamp(Vector3 p)
         {
-            Vector2 flat = new Vector2(p.x, p.z);
-            if (flat.magnitude > arenaRadius)
-            {
-                flat = flat.normalized * arenaRadius;
-                p.x = flat.x;
-                p.z = flat.y;
-            }
+            p.x = Mathf.Clamp(p.x, -arenaHalfSize.x, arenaHalfSize.x);
+            p.z = Mathf.Clamp(p.z, -arenaHalfSize.y, arenaHalfSize.y);
             return p;
         }
     }

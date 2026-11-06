@@ -52,8 +52,8 @@ namespace RingFighter
         [Header("Brain (EnemyBrain)")]
         [Tooltip("Ticked when an EnemyBrain moves this dummy. Unticked, it wanders back and forth on its own (the old behavior).")]
         public bool brainControlled;
-        [Tooltip("The dummy never goes further than this from the middle of the arena (meters).")]
-        public float arenaRadius = 10f;
+        [Tooltip("Half the size (meters, X and Z) of the open area he can move in, around the middle of the arena. Matches the open space inside the parked car rows.")]
+        public Vector2 arenaHalfSize = new Vector2(20f, 18f);
 
         [Header("Teleport (started by EnemyBrain)")]
         [Tooltip("Seconds he flickers in place (the warning) before he vanishes.")]
@@ -118,6 +118,30 @@ namespace RingFighter
         public Vector3 DesiredVelocity { get; set; }
         /// <summary>Where he stands on the floor (without knockback or whirlwind height).</summary>
         public Vector3 GroundPosition { get { return groundPos; } }
+        /// <summary>'p' kept inside the open area, 'margin' meters from its edges.</summary>
+        public Vector3 ClampToArena(Vector3 p, float margin)
+        {
+            p.x = Mathf.Clamp(p.x, -arenaHalfSize.x + margin, arenaHalfSize.x - margin);
+            p.z = Mathf.Clamp(p.z, -arenaHalfSize.y + margin, arenaHalfSize.y - margin);
+            return p;
+        }
+
+        public bool InsideArena(Vector3 p, float margin)
+        {
+            return Mathf.Abs(p.x) <= arenaHalfSize.x - margin && Mathf.Abs(p.z) <= arenaHalfSize.y - margin;
+        }
+
+        /// <summary>Direction out of the arena if 'p' is within 'margin' of an edge (zero if not near one).</summary>
+        public Vector3 OutwardNearEdge(Vector3 p, float margin)
+        {
+            Vector3 o = Vector3.zero;
+            if (p.x > arenaHalfSize.x - margin) o.x = 1f;
+            else if (p.x < -arenaHalfSize.x + margin) o.x = -1f;
+            if (p.z > arenaHalfSize.y - margin) o.z = 1f;
+            else if (p.z < -arenaHalfSize.y + margin) o.z = -1f;
+            return o.normalized;
+        }
+
         /// <summary>Height of the arena floor under him (his starting height).</summary>
         public float FloorHeight { get { return home.y; } }
         public bool IsTeleporting { get { return teleport != Teleport.None; } }
@@ -542,13 +566,7 @@ namespace RingFighter
                 Vector3 v = CanAct ? DesiredVelocity : Vector3.zero;
                 v.y = 0f;
                 groundPos += v * Time.deltaTime;
-                Vector2 flat = new Vector2(groundPos.x, groundPos.z);
-                if (flat.magnitude > arenaRadius)
-                {
-                    flat = flat.normalized * arenaRadius;
-                    groundPos.x = flat.x;
-                    groundPos.z = flat.y;
-                }
+                groundPos = ClampToArena(groundPos, 0f);
                 basePos = groundPos;
             }
             else

@@ -125,8 +125,12 @@ namespace RingFighter
                 return;
             }
 
-            if (mode == Mode.Dash) TryDash(stick, stickHand);
-            else if (mode == Mode.Smooth) Glide(stick);
+            // Recharge stance: slow walk only, no dashing.
+            RechargeMove recharge = controller != null ? controller.GetComponent<RechargeMove>() : null;
+            bool recharging = recharge != null && recharge.IsActive;
+            if (recharging) Glide(stick, recharge.moveSpeedFactor);
+            else if (mode == Mode.Dash) TryDash(stick, stickHand);
+            else if (mode == Mode.Smooth) Glide(stick, 1f);
         }
 
         // Ring-hand stick flicked left/right: turn the player in place (around the head, so the view doesn't swing).
@@ -219,13 +223,13 @@ namespace RingFighter
             }
         }
 
-        private void Glide(Vector2 stick)
+        private void Glide(Vector2 stick, float speedFactor)
         {
             float mag = stick.magnitude;
             if (mag < deadzone) return;
             Vector3 dir = WorldDirection(stick);
             dir.y = 0f;
-            Vector3 p = rig.transform.position + dir * (smoothSpeed * Time.deltaTime);
+            Vector3 p = rig.transform.position + dir * (smoothSpeed * speedFactor * Time.deltaTime);
             p.y = rig.transform.position.y;
             rig.transform.position = Clamp(p);
         }

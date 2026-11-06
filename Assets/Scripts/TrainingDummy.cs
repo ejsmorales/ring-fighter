@@ -280,6 +280,19 @@ namespace RingFighter
             }
         }
 
+        /// <summary>A nearby whirlwind drags him toward its center. He can still walk out if he moves away.</summary>
+        public void OnPull(Vector3 center, float speed, float deltaTime)
+        {
+            if (!CanAct) return;
+            Vector3 to = center - (brainControlled ? groundPos : transform.position);
+            to.y = 0f;
+            float d = to.magnitude;
+            if (d < 0.05f) return;
+            Vector3 step = to / d * Mathf.Min(speed * deltaTime, d);
+            if (brainControlled) groundPos += step;
+            else knockOffset += step;
+        }
+
         private bool Slowed { get { return Time.time < slowedUntil; } }
 
         private void UpdateAir()

@@ -253,3 +253,9 @@ Record each headset session here: date, build, what worked, what didn't.
   - Movement clips arrived from the art conversation: strafe_left, walk_forward, walk_back (no strafe_right). The
     blend tree mirrors strafe_left for the missing side; a real strafe_right is picked up automatically if added.
 
+- **2026-11-05 (night) — snap turn + smoothing + walk clips build: "much smoother and manageable".** Problems: with
+  him moving you miss more and run low on energy (blocking small bolts isn't enough to recharge); the whirlwind is
+  hard to use. **Decisions:** a *recharge stance* (both grips + ring hand above the head, 35/s, no attacks, slow walk,
+  counts as an opening for the enemy); a *gentle* whirlwind pull within 3 m (0.6-1.2 m/s, he can walk out).
+  Untested.
+

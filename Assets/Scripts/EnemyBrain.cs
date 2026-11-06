@@ -252,12 +252,20 @@ namespace RingFighter
             if (bigMoveWas && !bigNow) lastBigMoveEnded = Time.time;
             bigMoveWas = bigNow;
 
+            bool recharging = false;
+            if (rc != null)
+            {
+                IReadOnlyList<Move> active = rc.ActiveMoves;
+                for (int i = 0; i < active.Count; i++)
+                    if (active[i] is RechargeMove) recharging = true;
+            }
             bool lowEnergy = player.energy != null && player.energy.Fraction < lowEnergyFraction;
             bool afterBig = Time.time - lastBigMoveEnded < afterBigMoveWindow;
-            if ((lowEnergy || afterBig) && Time.time >= nextPunish && dummy.HurryNextShot(0.15f))
+            if ((lowEnergy || afterBig || recharging) && Time.time >= nextPunish && dummy.HurryNextShot(0.15f))
             {
                 nextPunish = Time.time + punishCooldown;
-                MoveLog.Add("Dummy punishes an opening (" + (lowEnergy ? "your energy is low" : "after your big attack") + ")");
+                string why = recharging ? "you're recharging" : (lowEnergy ? "your energy is low" : "after your big attack");
+                MoveLog.Add("Dummy punishes an opening (" + why + ")");
             }
         }
 

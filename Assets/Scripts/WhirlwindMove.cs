@@ -15,6 +15,12 @@ namespace RingFighter
         public float minEnergyToStart = 14f;
         public float damagePerSecond = 28f;
         public float radius = 1.4f;
+        [Tooltip("Targets within this distance (meters) of the vortex are dragged toward it.")]
+        public float pullRadius = 3f;
+        [Tooltip("Pull speed (m/s) at the edge of the pull radius...")]
+        public float pullSpeedAtEdge = 0.6f;
+        [Tooltip("...rising to this near the vortex. Gentle: he can still walk out if he moves away.")]
+        public float pullSpeedNear = 1.2f;
         [Tooltip("Speed (m/s) when it starts.")]
         public float travelSpeed = 2.2f;
         [Tooltip("Top speed (m/s) after it has run for 'Ramp Time'.")]
@@ -139,6 +145,19 @@ namespace RingFighter
             hitPoints.Clear();
 
             // Targets by plain math first (works even if colliders are missing in a build).
+            // Gentle pull on anything within the pull radius.
+            HitShapes.Overlap(center, pullRadius, hitThisFrame, hitPoints);
+            Vector3 ground = root.transform.position;
+            for (int i = 0; i < hitThisFrame.Count; i++)
+            {
+                Vector3 flat = hitPoints[i] - ground;
+                flat.y = 0f;
+                float t = Mathf.InverseLerp(pullRadius, radius, flat.magnitude);
+                hitThisFrame[i].OnPull(ground, Mathf.Lerp(pullSpeedAtEdge, pullSpeedNear, t), Time.deltaTime);
+            }
+            hitThisFrame.Clear();
+            hitPoints.Clear();
+
             HitShapes.Overlap(center, radius, hitThisFrame, hitPoints);
             for (int i = 0; i < hitThisFrame.Count; i++)
                 Hurt(hitThisFrame[i], hitPoints[i], center);

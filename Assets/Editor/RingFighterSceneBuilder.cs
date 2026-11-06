@@ -128,6 +128,11 @@ namespace RingFighter.EditorTools
             WhirlwindMove whirl = ringGo.AddComponent<WhirlwindMove>();
             whirl.whirlwindMaterial = whirlMat;
             whirl.priority = 20;
+            RechargeMove recharge = ringGo.AddComponent<RechargeMove>();
+            recharge.priority = 40;
+            RechargeVfx rechargeFx = ringGo.AddComponent<RechargeVfx>();
+            rechargeFx.recharge = recharge;
+            rechargeFx.controller = controller;
             ShieldMove shield = ringGo.AddComponent<ShieldMove>();
             shield.shieldMaterial = shieldMat;
             shield.priority = 10;

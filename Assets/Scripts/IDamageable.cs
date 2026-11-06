@@ -14,5 +14,8 @@ namespace RingFighter
 
         /// <summary>The whirlwind is touching this target for 'deltaTime' seconds (lifts it, slows its attacks).</summary>
         void OnWhirlwind(float deltaTime);
+
+        /// <summary>A nearby whirlwind drags this target toward 'center' at up to 'speed' m/s this frame.</summary>
+        void OnPull(Vector3 center, float speed, float deltaTime);
     }
 }

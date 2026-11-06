@@ -295,4 +295,7 @@ Record each headset session here: date, build, what worked, what didn't.
     upward beam. Cause of the first: WhirlwindVfx (and LaserVfx, BlastChargeVfx) started with `visible = false`, so
     their first `SetVisible(false)` returned early and the freshly built parts stayed drawn at the origin until first
     use. Fixed; recharge beam removed.
+  - **Audio decisions:** start with sounds synthesized in code to find the feel, then decide on real sounds (AI-made,
+    free libraries, or the owner's own recordings). First priority: ring attacks (done, `SfxSynth` + `RingAudio`).
+    Music style wanted: "a Mega Man level or fighting game" (chiptune fits code synthesis; next).
 

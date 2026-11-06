@@ -36,8 +36,12 @@ namespace RingFighter
         }
 
         // Tells the visual component how this shot ended, so it can play an end effect (a blast explodes).
+        /// <summary>Raised when a projectile ends (hit, floor or timeout), with where. RingAudio plays the blast boom.</summary>
+        public static event System.Action<Projectile, Vector3> Ended;
+
         private void NotifyEnd(ProjectileVfx.End kind, Vector3 point)
         {
+            if (Ended != null) Ended(this, point);
             ProjectileVfx vfx = GetComponent<ProjectileVfx>();
             if (vfx != null) vfx.OnEnded(kind, point);
         }

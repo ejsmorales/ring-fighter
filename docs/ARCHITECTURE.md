@@ -45,6 +45,8 @@ rebuild. Change defaults in the scripts (or in the builder) to make them stick.
 | `PlayerHealth.cs` | Player health, head and torso hit spheres, hit flash, knock-out and fight restart. `PlayerHealth.Instance`. |
 | `EnemyBolt.cs` | The dummy's yellow bolt (also: clashes with your projectiles via `ClashWith`, laser cuts via `CutAlong`): hits the player, is absorbed by a single shield (`ShieldMove.AbsorbHit`) or reflected by a double shield (`ShieldMove.Intercept` is the plane-crossing test). |
 | `PlayerMovement.cs` | Snap turn on the ring-hand stick (45 degrees). Off-hand thumbstick movement: Dash (default), Smooth, Off; click the stick to cycle. Moves the rig (player root), clamped to an arena circle. Independent of the move system. |
+| `SfxSynth.cs` | Code-synthesized sound clips (cached): bolt zap, blast launch/boom, laser hum, charge tone, wind, shield hum, block/reflect, recharge chord. |
+| `RingAudio.cs` | Plays the ring move sounds by listening to the moves and to `Projectile.Spawned/Ended` and `ShieldMove.BoltBlocked`. No gameplay. |
 | `RechargeMove.cs` | Recharge stance: ring-hand fist (grip) with the ring held in front of your face refills energy (35/s); uses both hands. `VFX/RechargeVfx.cs` draws its glow. |
 | `EnemyBrain.cs` | The opponent's decision making ("duelist"): keeps range and circles, dodges `Projectile.Spawned` shots, punishes openings (`TrainingDummy.HurryNextShot`), teleports to your flank (`TrainingDummy.BeginTeleport`). Sets `TrainingDummy.DesiredVelocity`; the dummy body does the moving, shooting and animation. |
 | `VFX/TeleportVfx.cs` | Teleport warning sparks and 3D sounds (reads `TrainingDummy.TeleportStarted` / `Teleported`). |

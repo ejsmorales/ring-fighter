@@ -8,7 +8,7 @@ Before testing: press **Y** (left controller) to show the debug panel. Its "Rece
 something didn't. The top lines show the ring hand, focus distance and the physics self-test.
 (Everything in this build is untested: built in the cloud, not yet run on the headset.)
 
-## This build — bigger play area, store variety (2026-11-06, second arena build)
+## This build — bigger play area, store variety, effect fixes, ring sounds (2026-11-06, second arena build)
 
 Last build: worked as expected. Notes: the same store building repeated; the map looks big but feels small because
 you couldn't get near the cars (you were limited to 4 m from the middle, the enemy to 10 m). Changes: parked rows
@@ -30,6 +30,13 @@ repeats with tints. Untested.
 | T8 | Start the game and walk away from the start spot | No green ring/glow left on the floor where you started (it was the whirlwind effect, built but never hidden until the first whirlwind) | — |
 | T9 | Laser, charged blast, whirlwind | Their effects still appear and disappear normally | — |
 | T10 | Recharge stance | The ring shines (green glow), no upward beam | `Recharging` |
+| T11 | Fire single bolts | A quick falling "pew" from your hand each shot | — |
+| T12 | Hold the laser | A buzzing hum while the beam is on, fading out when it stops | — |
+| T13 | Charge and release a blast | Pulsing tone that rises in pitch as it charges; deep "whoomp" when fired; rumbling boom where it lands | — |
+| T14 | Whirlwind | Swirling wind that follows the vortex (louder as it gets near you, fades as it travels away) | — |
+| T15 | Raise a shield, then double it; take bolts on it | Low hum while up (deeper and louder when doubled); metallic clang on absorb, clang + rising zap on reflect | — |
+| T16 | Recharge stance | Soft bright chord while charging, pitch rising slightly as energy fills | — |
+| T17 | Overall: do these sounds point in the right direction? Which feel wrong (too retro, too loud, annoying on repeat)? | Report: this decides what the real sounds should be like | — |
 
 ## Regression (every build)
 

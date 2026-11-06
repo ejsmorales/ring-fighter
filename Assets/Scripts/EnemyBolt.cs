@@ -251,6 +251,7 @@ namespace RingFighter
             transform.rotation = Quaternion.LookRotation(back);
             Tint(ReflectGreen);
             shield.PulseHands(0.9f, 0.15f);
+            shield.NotifyBlocked(true);
             Impact.Spark(point, ReflectGreen, 0.35f);
             MoveLog.Add("Bolt REFLECTED (" + Mathf.RoundToInt(damage) + " dmg)");
         }

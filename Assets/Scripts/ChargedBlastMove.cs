@@ -31,6 +31,9 @@ namespace RingFighter
         public float aimAssistAngle = 14f;
 
         private float charge;      // 0 to 1
+
+        /// <summary>How charged the blast is (0 to 1), for sound and effects.</summary>
+        public float Charge { get { return charge; } }
         private GameObject orb;
 
         /// <summary>The placeholder orb while charging, null otherwise (read by BlastChargeVfx).</summary>

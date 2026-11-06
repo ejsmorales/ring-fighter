@@ -48,6 +48,15 @@ namespace RingFighter
         public Vector3 LastImpactPoint { get; private set; }
 
         public bool IsBlocking { get { return IsActive && disc != null; } }
+        /// <summary>The shield disc (null when down), for sound and effects.</summary>
+        public Transform Disc { get { return disc != null ? disc.transform : null; } }
+        /// <summary>Raised when the shield stops an enemy bolt: true = reflected (double shield), false = absorbed.</summary>
+        public event System.Action<bool> BoltBlocked;
+
+        public void NotifyBlocked(bool reflected)
+        {
+            if (BoltBlocked != null) BoltBlocked(reflected);
+        }
         public bool IsDoubled { get { return IsBlocking && second != null; } }
 
         /// <summary>How strong the shield is: 1 normally, 2 when both arms block (for future enemy attacks).</summary>
@@ -92,6 +101,7 @@ namespace RingFighter
             if (!IsBlocking) return false;
             ctx.energy.Add(absorbRefund);
             PulseHands(0.6f, 0.12f);
+            NotifyBlocked(false);
             return true;
         }
 
